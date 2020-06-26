@@ -1,0 +1,18 @@
+[package]
+name = "ghr-capi"
+version = "0.1.0"
+authors = ["shun suzuki <suzuki@hapis.k.u-tokyo.ac.jp>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "ghrcapi"
+path = "src/lib.rs"
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+libc = "0.2"
+ghr = {path="../ghr"}
+num-derive = "0.3"
+num-traits = "0.2"
