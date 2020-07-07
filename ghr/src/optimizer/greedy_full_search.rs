@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -17,7 +17,9 @@ use crate::Vector3;
 
 use std::f32::consts::PI;
 
-type Complex = num::Complex<f32>;
+use ndarray_linalg::*;
+
+type Complex = c32;
 
 pub struct GreedyFullSearch {
     division: usize,
@@ -36,7 +38,7 @@ impl GreedyFullSearch {
     {
         let mut scatter = crate::buffer::ComplexFieldBufferScatter::new();
         for target_point in target_points {
-            scatter.add_observe_point(*target_point, num::Complex::new(0., 0.));
+            scatter.add_observe_point(*target_point, Complex::new(0., 0.));
         }
         let N = calculator.wave_sources().len();
         let mut obj_fn = obj_fn;

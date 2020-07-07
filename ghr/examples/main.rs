@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -14,8 +14,8 @@
 use ghr::buffer::{generator::*, BufferBuilder};
 use ghr::calculator::{Calculate, Calculator, CpuCalculator};
 use ghr::optimizer::*;
+use ghr::vec_utils::*;
 use ghr::wave_source::WaveSource;
-use ghr::Vector3;
 
 use image::png::PNGEncoder;
 use image::ColorType;
@@ -49,11 +49,11 @@ macro_rules! write_image {
 
 fn main() {
     let focus_z = 150.0;
-    let focal_pos = Vector3::new(
+    let focal_pos = [
         SOURCE_SIZE * (NUM_SOURCE_X - 1) as f32 / 2.0,
         SOURCE_SIZE * (NUM_SOURCE_Y - 1) as f32 / 2.0,
         focus_z,
-    );
+    ];
     let obs_range = 100.0;
 
     let mut calculator = CpuCalculator::new();
@@ -63,17 +63,17 @@ fn main() {
     let mut transducers = Vec::new();
     for y in 0..NUM_SOURCE_Y {
         for x in 0..NUM_SOURCE_X {
-            let pos = Vector3::new(SOURCE_SIZE * x as f32, SOURCE_SIZE * y as f32, 0.);
+            let pos = [SOURCE_SIZE * x as f32, SOURCE_SIZE * y as f32, 0.];
             transducers.push(WaveSource::new(pos, 0.0, 0.0));
         }
     }
     calculator.add_wave_sources(&transducers);
 
     let target_pos = vec![
-        focal_pos + Vector3::new(20., 0., 0.),
-        focal_pos - Vector3::new(20., 0., 0.),
-        focal_pos + Vector3::new(0., 20., 0.),
-        focal_pos - Vector3::new(0., 20., 0.),
+        add(focal_pos, [20., 0., 0.]),
+        sub(focal_pos, [20., 0., 0.]),
+        add(focal_pos, [0., 20., 0.]),
+        sub(focal_pos, [0., 20., 0.]),
     ];
     let mut amps = Vec::with_capacity(target_pos.len());
     for _ in 0..target_pos.len() {
@@ -102,9 +102,15 @@ fn main() {
     let bb = (bounds.x(), bounds.y());
     write_image!("xy_gfs.png", buffer, bb);
 
-    let horn = Horn::new(target_pos, amps, WAVE_LENGTH as f64);
+    let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     horn.optimize(calculator.wave_sources());
 
     buffer.calculate(&calculator);
     write_image!("xy_horn.png", buffer, bb);
+
+    let long = Long::new(target_pos, amps, WAVE_LENGTH as f64);
+    long.optimize(calculator.wave_sources());
+
+    buffer.calculate(&calculator);
+    write_image!("xy_long.png", buffer, bb);
 }

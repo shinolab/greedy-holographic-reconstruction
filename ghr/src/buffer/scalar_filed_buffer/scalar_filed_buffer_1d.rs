@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -67,15 +67,15 @@ impl FieldBuffer for ScalarFieldBuffer1D {
         let len = self.bounds.size();
         let origin = self.origin;
         match self.axis {
-            Axis::X => Box::new((0..len).map(move |n| {
-                Vector3::new(origin[0] + (n as f32 * resolution), origin[1], origin[2])
-            })),
-            Axis::Y => Box::new((0..len).map(move |n| {
-                Vector3::new(origin[0], origin[1] + (n as f32 * resolution), origin[2])
-            })),
-            Axis::Z => Box::new((0..len).map(move |n| {
-                Vector3::new(origin[0], origin[1], origin[2] + (n as f32 * resolution))
-            })),
+            Axis::X => Box::new(
+                (0..len).map(move |n| [origin[0] + (n as f32 * resolution), origin[1], origin[2]]),
+            ),
+            Axis::Y => Box::new(
+                (0..len).map(move |n| [origin[0], origin[1] + (n as f32 * resolution), origin[2]]),
+            ),
+            Axis::Z => Box::new(
+                (0..len).map(move |n| [origin[0], origin[1], origin[2] + (n as f32 * resolution)]),
+            ),
         }
     }
 }

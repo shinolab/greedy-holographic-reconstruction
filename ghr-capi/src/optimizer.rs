@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -39,7 +39,7 @@ pub unsafe extern "C" fn GHR_GreedyFullSearch(
 pub unsafe extern "C" fn GHR_Horn(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f32,
+    amps: *const f64,
     size: u64,
     wave_len: f64,
 ) {
@@ -49,5 +49,22 @@ pub unsafe extern "C" fn GHR_Horn(
     let amps = std::slice::from_raw_parts(amps, len);
     let horn = Horn::new(foci.to_vec(), amps.to_vec(), wave_len);
     horn.optimize((*calc).wave_sources());
+    forget(calc);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn GHR_Long(
+    handle: *mut c_void,
+    foci: *const c_void,
+    amps: *const f64,
+    size: u64,
+    wave_len: f64,
+) {
+    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
+    let len = size as usize;
+    let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
+    let amps = std::slice::from_raw_parts(amps, len);
+    let long = Long::new(foci.to_vec(), amps.to_vec(), wave_len);
+    long.optimize((*calc).wave_sources());
     forget(calc);
 }

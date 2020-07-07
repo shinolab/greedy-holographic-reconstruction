@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 26/06/2020
+Last Modified: 07/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -31,5 +31,5 @@ __all__ = [
     'Directivity',
     'Vector3']
 
-LIB_PATH = os.path.join(os.path.dirname(__file__), 'bin', 'ghrcapi.dll')
+LIB_PATH = os.path.join(os.path.dirname(__file__), 'bin', 'libghrcapi.so')
 init_dll(LIB_PATH)

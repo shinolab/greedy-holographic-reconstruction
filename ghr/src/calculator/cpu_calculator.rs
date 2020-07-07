@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -17,11 +17,16 @@ use super::*;
 use crate::buffer::{
     AmplitudeFieldBuffer, ComplexFieldBufferScatter, FieldBuffer, IntensityFieldBuffer,
 };
+use crate::vec_utils::*;
 use crate::wave_source::WaveSource;
 
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::f32::consts::PI;
+
+use ndarray_linalg::*;
+
+type Complex = c32;
 
 #[derive(PartialEq, Debug)]
 struct MinFloat(f32);
@@ -71,13 +76,13 @@ macro_rules! calc_from_complex_wave {
             .collect::<Vec<_>>()
             .par_iter()
             .map(|&observe_point| {
-                let mut $val = num::Complex::new(0., 0.);
+                let mut $val = Complex::new(0., 0.);
                 for source in $self.sources.iter() {
-                    let diff = observe_point - source.pos;
-                    let dist = diff.norm();
+                    let diff = sub(observe_point, source.pos);
+                    let dist = norm(diff);
                     let r = source.amp / dist;
                     let phi = source.phase - wave_num * dist;
-                    $val += num::Complex::from_polar(r, phi);
+                    $val += Complex::from_polar(&r, &phi);
                 }
                 $exp
             })
@@ -96,8 +101,8 @@ macro_rules! calc_from_complex_wave_accurate {
                 let mut re_heap = BinaryHeap::with_capacity($self.sources.len());
                 let mut im_heap = BinaryHeap::with_capacity($self.sources.len());
                 for source in $self.sources.iter() {
-                    let diff = observe_point - source.pos;
-                    let dist = diff.norm();
+                    let diff = sub(observe_point, source.pos);
+                    let dist = norm(diff);
                     let r = source.amp / dist;
                     let phi = source.phase - wave_num * dist;
                     re_heap.push(MinFloat(r * phi.cos()));
@@ -110,7 +115,7 @@ macro_rules! calc_from_complex_wave_accurate {
                     re += r.0;
                     im += i.0;
                 }
-                let $val = num::Complex::new(re, im);
+                let $val = Complex::new(re, im);
                 $exp
             })
             .collect_into_vec($buffer.buffer_mut());

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -16,7 +16,6 @@ use super::bounds::Bounds;
 use super::dimension::{Axis, Dimension};
 use super::intensity_field_buffer::IntensityFieldBuffer;
 use super::scalar_filed_buffer::*;
-use crate::Vector3;
 
 pub trait Generator {
     type Output;
@@ -35,7 +34,7 @@ macro_rules! scalar_gen {
         let ny = (($y_range.1 - $y_range.0) / $r) as usize + 1;
         let nz = (($z_range.1 - $z_range.0) / $r) as usize + 1;
 
-        let origin = Vector3::new($x_range.0, $y_range.0, $z_range.0);
+        let origin = [$x_range.0, $y_range.0, $z_range.0];
         let ptr: Box<dyn $trait> = match $dimension {
             Dimension::None => Box::new(ScalarFieldBuffer1D::new(
                 Axis::X,

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,7 +13,6 @@
 
 use ghr::calculator::*;
 use ghr::wave_source::WaveSource;
-use ghr::Vector3;
 
 use std::ffi::c_void;
 use std::mem::forget;
@@ -69,7 +68,7 @@ pub unsafe extern "C" fn GHR_SetWaveSourceProps(
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
     let idx = i as usize;
-    sources[idx].pos = Vector3::new(x, y, z);
+    sources[idx].pos = [x, y, z];
     sources[idx].amp = amp;
     sources[idx].phase = phase;
     forget(calc);

@@ -17,3 +17,4 @@ mod long;
 
 pub use greedy_full_search::GreedyFullSearch;
 pub use horn::Horn;
+pub use long::Long;

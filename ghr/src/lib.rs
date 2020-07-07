@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -17,6 +17,8 @@ extern crate itertools;
 pub mod buffer;
 pub mod calculator;
 pub mod optimizer;
+pub mod vec_utils;
 pub mod wave_source;
 
-pub type Vector3 = na::Vector3<f32>;
+pub type Float = f32;
+pub type Vector3 = [Float; 3];

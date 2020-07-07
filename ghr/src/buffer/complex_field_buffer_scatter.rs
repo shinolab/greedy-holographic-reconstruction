@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -15,8 +15,9 @@ use crate::buffer::bounds::Bounds;
 use crate::buffer::dimension::Dimension;
 use crate::buffer::traits::*;
 use crate::Vector3;
+use ndarray_linalg::*;
 
-type Complex = num::Complex<f32>;
+type Complex = c32;
 
 pub struct ComplexFieldBufferScatter {
     buffer: Vec<Complex>,

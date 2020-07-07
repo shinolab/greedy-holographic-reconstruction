@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 07/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -84,7 +84,7 @@ impl FieldBuffer for ScalarFieldBuffer2D {
                     )
                     .map(
                         move |(to_variable!($second, $x, $y, $z), to_variable!($first, $x, $y, $z))| {
-                            Vector3::new($x, $y, $z)
+                            [$x, $y, $z]
                         },
                     )},
                 )
