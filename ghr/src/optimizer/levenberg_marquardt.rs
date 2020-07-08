@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 08/07/2020
+ * Last Modified: 09/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -113,20 +113,20 @@ impl LM {
         let mut mu = TAU * A_max;
 
         let mut found = g.norm_max() <= EPS_1;
-        let Fx = Self::calc_Fx(&BhB, &x);
+        let mut Fx = Self::calc_Fx(&BhB, &x);
         for _ in 0..K_MAX {
             if found {
                 break;
             }
             let h_lm = -(&A + &(mu * &I)).solve(&g).unwrap();
-
             if h_lm.norm() <= EPS_2 * (x.norm() + EPS_2) {
                 found = true;
             } else {
                 let x_new = &x + &h_lm;
                 let Fx_new = Self::calc_Fx(&BhB, &x_new);
-                let L0_Lhlm = h_lm.t().dot(&(mu * &h_lm - &g));
+                let L0_Lhlm = 0.5 * h_lm.t().dot(&(mu * &h_lm - &g));
                 let rho = (Fx - Fx_new) / L0_Lhlm;
+                Fx = Fx_new;
                 if rho > 0.0 {
                     x = x_new;
                     let (A_new, g_new) = Self::calc_JhJ_Jhfx(&BhB, &x);
