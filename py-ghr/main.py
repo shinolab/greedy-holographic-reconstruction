@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 07/07/2020
+Last Modified: 09/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     plt.savefig('xy_horn.png')
     plt.show()
 
-  # ######### Long #####################
+    # ######## Long #####################
     optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
 
     # show phases
@@ -166,4 +166,40 @@ if __name__ == '__main__':
     cax = divider.append_axes('right', '5%', pad='3%')
     fig.colorbar(heat_map, cax=cax)
     plt.savefig('xy_long.png')
+    plt.show()
+
+    # ######## Levenberg_Marquardt #####################
+    optimizer = Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
+
+    # show phases
+    dpi = 72
+    fig = plt.figure(figsize=(6, 6), dpi=dpi)
+    axes = fig.add_subplot(111, aspect='equal')
+
+    scat = plot_helper.plot_phase_2d(fig, axes, wave_sources, TRANS_SIZE)
+    plot_helper.add_colorbar(fig, axes, scat)
+    plt.savefig('phase_lm.png')
+    plt.show()
+
+    # generate buffer
+    buffer = BufferBuilder.new()\
+        .x_range(X_RANGE)\
+        .y_range(Y_RANGE)\
+        .z_at(150.0)\
+        .resolution(RESOLUTION)\
+        .generate(FieldType.Pressure)
+
+    buffer.calculate(calculator)
+
+    # plot
+    bounds = buffer.bounds()
+    array = buffer.get_array().reshape(bounds[0], bounds[1])
+    DPI = 72
+    fig = plt.figure(figsize=(6, 6), dpi=DPI)
+    axes = fig.add_subplot(111, aspect='equal')
+    heat_map = plot_helper.plot_acoustic_field_2d(axes, array, X_RANGE, Y_RANGE, RESOLUTION, ticks_step=10.0)
+    divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
+    cax = divider.append_axes('right', '5%', pad='3%')
+    fig.colorbar(heat_map, cax=cax)
+    plt.savefig('xy_lm.png')
     plt.show()

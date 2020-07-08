@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 07/07/2020
+Last Modified: 09/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -211,3 +211,16 @@ class Optimizer():
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
         nativemethods.GHR_DLL.GHR_Long(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len))
+
+    @staticmethod
+    def levenberg_marquardt(calculate: Calculator, foci, amps, wave_len):
+        size = len(foci)
+        amps = np.array(amps).astype(np.float64)
+        amps = np.ctypeslib.as_ctypes(amps)
+        foci_array = np.zeros([size * 3]).astype(np.float32)
+        for i, focus in enumerate(foci):
+            foci_array[3 * i] = focus[0]
+            foci_array[3 * i + 1] = focus[1]
+            foci_array[3 * i + 2] = focus[2]
+        foci_array = np.ctypeslib.as_ctypes(foci_array)
+        nativemethods.GHR_DLL.GHR_LM(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len))
