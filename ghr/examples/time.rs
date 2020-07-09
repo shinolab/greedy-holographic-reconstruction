@@ -89,44 +89,50 @@ macro_rules! measure {
 
 fn main() {
     let n_sqrt = 10;
-    let m_max_pow = 5;
+    let m_max_pow = 10;
 
-    // GHS
-    let file_path = "ghs.csv";
-    let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    for i in 1..=m_max_pow {
-        let m = 1 << i;
-        let millis = measure!(GreedyFullSearch, m, n_sqrt);
-        wtr.write_record(&[
-            (n_sqrt * n_sqrt).to_string(),
-            (1 << i).to_string(),
-            millis.to_string(),
-        ])
-        .unwrap();
-    }
+    // // GHS
+    // println!("Greedy Holographic Reconstruction");
+    // let file_path = "ghs.csv";
+    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    // for i in 1..=m_max_pow {
+    //     let m = 1 << i;
+    //     println!("{}", m);
+    //     let millis = measure!(GreedyFullSearch, m, n_sqrt);
+    //     wtr.write_record(&[
+    //         (n_sqrt * n_sqrt).to_string(),
+    //         (1 << i).to_string(),
+    //         millis.to_string(),
+    //     ])
+    //     .unwrap();
+    // }
 
-    // Long
-    let file_path = "long.csv";
-    let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    for i in 1..=m_max_pow {
-        let m = 1 << i;
-        let millis = measure!(Long, m, n_sqrt);
-        wtr.write_record(&[
-            (n_sqrt * n_sqrt).to_string(),
-            (1 << i).to_string(),
-            millis.to_string(),
-        ])
-        .unwrap();
-    }
+    // // Long
+    // println!("Long te al, 2014");
+    // let file_path = "long.csv";
+    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    // for i in 1..=m_max_pow {
+    //     let m = 1 << i;
+    //     println!("{}", m);
+    //     let millis = measure!(Long, m, n_sqrt);
+    //     wtr.write_record(&[
+    //         (n_sqrt * n_sqrt).to_string(),
+    //         (1 << i).to_string(),
+    //         millis.to_string(),
+    //     ])
+    //     .unwrap();
+    // }
 
     // HORN
+    println!("HORN");
     let file_path = "horn.csv";
     let mut wtr = csv::Writer::from_path(file_path).unwrap();
     wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
     for i in 1..=m_max_pow {
         let m = 1 << i;
+        println!("{}", m);
         let millis = measure!(Horn, m, n_sqrt);
         wtr.write_record(&[
             (n_sqrt * n_sqrt).to_string(),
@@ -137,11 +143,13 @@ fn main() {
     }
 
     // LM
+    println!("Levenberg-Marquardt");
     let file_path = "lm.csv";
     let mut wtr = csv::Writer::from_path(file_path).unwrap();
     wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
     for i in 1..=m_max_pow {
         let m = 1 << i;
+        println!("{}", m);
         let millis = measure!(LM, m, n_sqrt);
         wtr.write_record(&[
             (n_sqrt * n_sqrt).to_string(),

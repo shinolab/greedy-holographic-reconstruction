@@ -25,7 +25,7 @@ use ndarray_linalg::*;
 
 type Complex = c64;
 
-const REPEAT_SDP: usize = 100;
+const REPEAT_SDP: usize = 200;
 const LAMBDA_SDP: f64 = 0.8;
 
 pub struct Horn {
@@ -136,7 +136,7 @@ impl Horn {
 
         let (u, s, vt) = b.svd(true, true).unwrap();
         let mut singular_values_inv_mat = Array::zeros((n, m));
-        for i in 0..m {
+        for i in 0..m.min(n) {
             let r = s[i] / (s[i] * s[i] + alpha * alpha);
             singular_values_inv_mat[[i, i]] = Complex::new(r, 0.0);
         }
@@ -150,7 +150,7 @@ impl Horn {
         let mut x = Array::eye(m);
 
         let lambda = self.lambda;
-        for _ in 0..(m * self.repeat) {
+        for _ in 0..self.repeat {
             let ii = (m as f64 * rng.gen_range(0., 1.)) as isize;
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
