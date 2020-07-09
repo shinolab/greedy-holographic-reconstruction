@@ -133,7 +133,7 @@ impl LM {
                     A = A_new;
                     g = g_new;
                     found = g.norm_max() <= EPS_1;
-                    mu = mu * (1f64 / 3.).max(1. - (2. * rho - 1.).pow(3.));
+                    mu *= (1f64 / 3.).max(1. - (2. * rho - 1.).pow(3.));
                     nu = 2.0;
                 } else {
                     mu *= nu;
