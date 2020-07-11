@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 09/07/2020
+ * Last Modified: 11/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -95,10 +95,18 @@ fn main() {
 
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
-    let optimizer = GreedyFullSearch::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+
+    let optimizer =
+        GreedyBruteForcePhase::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     optimizer.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
-    write_image!("xy_gfs.png", buffer, bb);
+    write_image!("xy_ghr_p.png", buffer, bb);
+
+    let optimizer =
+        GreedyBruteForcePhaseAmp::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    optimizer.optimize(calculator.wave_sources());
+    buffer.calculate(&calculator);
+    write_image!("xy_ghr_pa.png", buffer, bb);
 
     let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     horn.optimize(calculator.wave_sources());

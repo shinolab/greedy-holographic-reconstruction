@@ -4,7 +4,7 @@
  * Created Date: 09/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 09/07/2020
+ * Last Modified: 11/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -91,22 +91,43 @@ fn main() {
     let n_sqrt = 10;
     let m_max_pow = 10;
 
-    // // GHS
-    // println!("Greedy Holographic Reconstruction");
-    // let file_path = "ghs.csv";
-    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    // for i in 1..=m_max_pow {
-    //     let m = 1 << i;
-    //     println!("{}", m);
-    //     let millis = measure!(GreedyFullSearch, m, n_sqrt);
-    //     wtr.write_record(&[
-    //         (n_sqrt * n_sqrt).to_string(),
-    //         (1 << i).to_string(),
-    //         millis.to_string(),
-    //     ])
-    //     .unwrap();
-    // }
+    // GHRBF PHASE
+    {
+        println!("Greedy Holographic Reconstruction with phase");
+        let file_path = "ghr_p.csv";
+        let mut wtr = csv::Writer::from_path(file_path).unwrap();
+        wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+        for i in 1..=m_max_pow {
+            let m = 1 << i;
+            println!("{}", m);
+            let millis = measure!(GreedyBruteForcePhase, m, n_sqrt);
+            wtr.write_record(&[
+                (n_sqrt * n_sqrt).to_string(),
+                (m).to_string(),
+                millis.to_string(),
+            ])
+            .unwrap();
+        }
+    }
+
+    // GHRBF PHASE and AMP
+    {
+        println!("Greedy Holographic Reconstruction with phase and amp");
+        let file_path = "ghr_pa.csv";
+        let mut wtr = csv::Writer::from_path(file_path).unwrap();
+        wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+        for i in 1..=m_max_pow {
+            let m = 1 << i;
+            println!("{}", m);
+            let millis = measure!(GreedyBruteForcePhaseAmp, m, n_sqrt);
+            wtr.write_record(&[
+                (n_sqrt * n_sqrt).to_string(),
+                (m).to_string(),
+                millis.to_string(),
+            ])
+            .unwrap();
+        }
+    }
 
     // // Long
     // println!("Long te al, 2014");
@@ -125,37 +146,37 @@ fn main() {
     //     .unwrap();
     // }
 
-    // HORN
-    println!("HORN");
-    let file_path = "horn.csv";
-    let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    for i in 1..=m_max_pow {
-        let m = 1 << i;
-        println!("{}", m);
-        let millis = measure!(Horn, m, n_sqrt);
-        wtr.write_record(&[
-            (n_sqrt * n_sqrt).to_string(),
-            (1 << i).to_string(),
-            millis.to_string(),
-        ])
-        .unwrap();
-    }
+    // // HORN
+    // println!("HORN");
+    // let file_path = "horn.csv";
+    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    // for i in 1..=m_max_pow {
+    //     let m = 1 << i;
+    //     println!("{}", m);
+    //     let millis = measure!(Horn, m, n_sqrt);
+    //     wtr.write_record(&[
+    //         (n_sqrt * n_sqrt).to_string(),
+    //         (1 << i).to_string(),
+    //         millis.to_string(),
+    //     ])
+    //     .unwrap();
+    // }
 
-    // LM
-    println!("Levenberg-Marquardt");
-    let file_path = "lm.csv";
-    let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    for i in 1..=m_max_pow {
-        let m = 1 << i;
-        println!("{}", m);
-        let millis = measure!(LM, m, n_sqrt);
-        wtr.write_record(&[
-            (n_sqrt * n_sqrt).to_string(),
-            (1 << i).to_string(),
-            millis.to_string(),
-        ])
-        .unwrap();
-    }
+    // // LM
+    // println!("Levenberg-Marquardt");
+    // let file_path = "lm.csv";
+    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    // for i in 1..=m_max_pow {
+    //     let m = 1 << i;
+    //     println!("{}", m);
+    //     let millis = measure!(LM, m, n_sqrt);
+    //     wtr.write_record(&[
+    //         (n_sqrt * n_sqrt).to_string(),
+    //         (1 << i).to_string(),
+    //         millis.to_string(),
+    //     ])
+    //     .unwrap();
+    // }
 }
