@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 11/07/2020
+ * Last Modified: 13/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -95,33 +95,23 @@ fn main() {
 
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
-
-    let optimizer =
-        GreedyBruteForcePhase::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-    optimizer.optimize(calculator.wave_sources());
+    let optimizer = GreedyBruteForce::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    optimizer.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     write_image!("xy_ghr_p.png", buffer, bb);
 
-    let optimizer =
-        GreedyBruteForcePhaseAmp::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-    optimizer.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    write_image!("xy_ghr_pa.png", buffer, bb);
-
     let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-    horn.optimize(calculator.wave_sources());
-
+    horn.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     write_image!("xy_horn.png", buffer, bb);
 
     let long = Long::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-    long.optimize(calculator.wave_sources());
-
+    long.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     write_image!("xy_long.png", buffer, bb);
 
     let lm = LM::new(target_pos, amps, WAVE_LENGTH as f64);
-    lm.optimize(calculator.wave_sources());
+    lm.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     write_image!("xy_lm.png", buffer, bb);
 }

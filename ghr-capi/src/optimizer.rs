@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 09/07/2020
+ * Last Modified: 13/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -19,18 +19,22 @@ use ghr::optimizer::*;
 use ghr::Vector3;
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_GreedyFullSearch(
+pub unsafe extern "C" fn GHR_GreedyBruteForce(
     handle: *mut c_void,
-    points: *const f32,
+    foci: *const c_void,
+    amps: *const f64,
     size: u64,
-    division: u64,
+    wave_len: f64,
+    include_amp: bool,
+    normalize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
-    let points = std::slice::from_raw_parts(points as *mut Vector3, len);
+    let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
+    let amps = std::slice::from_raw_parts(amps, len);
 
-    let gfs = GreedyFullSearch::new(division as usize);
-    gfs.maximize(&mut *calc, points, |c| c.norm());
+    let gfs = GreedyBruteForce::new(foci.to_vec(), amps.to_vec(), wave_len);
+    gfs.optimize((*calc).wave_sources(), include_amp, normalize);
 
     forget(calc);
 }
@@ -42,13 +46,15 @@ pub unsafe extern "C" fn GHR_Horn(
     amps: *const f64,
     size: u64,
     wave_len: f64,
+    include_amp: bool,
+    normalize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
     let horn = Horn::new(foci.to_vec(), amps.to_vec(), wave_len);
-    horn.optimize((*calc).wave_sources());
+    horn.optimize((*calc).wave_sources(), include_amp, normalize);
     forget(calc);
 }
 
@@ -59,13 +65,15 @@ pub unsafe extern "C" fn GHR_Long(
     amps: *const f64,
     size: u64,
     wave_len: f64,
+    include_amp: bool,
+    normalize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
     let long = Long::new(foci.to_vec(), amps.to_vec(), wave_len);
-    long.optimize((*calc).wave_sources());
+    long.optimize((*calc).wave_sources(), include_amp, normalize);
     forget(calc);
 }
 
@@ -76,12 +84,14 @@ pub unsafe extern "C" fn GHR_LM(
     amps: *const f64,
     size: u64,
     wave_len: f64,
+    include_amp: bool,
+    normalize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
     let lm = LM::new(foci.to_vec(), amps.to_vec(), wave_len);
-    lm.optimize((*calc).wave_sources());
+    lm.optimize((*calc).wave_sources(), include_amp, normalize);
     forget(calc);
 }

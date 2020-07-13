@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 09/07/2020
+Last Modified: 13/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     ]
     amps = np.ones(len(target_pos))
 
-    optimizer = Optimizer.greedy_full_search(calculator, target_pos, 1 << 4)
+    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, False, True)
 
     # show phases
     dpi = 72
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     plt.show()
 
     # ######### HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, False, True)
 
     # show phases
     dpi = 72
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     plt.show()
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, False, True)
 
     # show phases
     dpi = 72
@@ -169,7 +169,7 @@ if __name__ == '__main__':
     plt.show()
 
     # ######## Levenberg_Marquardt #####################
-    optimizer = Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
 
     # show phases
     dpi = 72

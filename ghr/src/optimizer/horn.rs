@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 13/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,6 +13,7 @@
 
 use std::f64::consts::PI;
 
+use crate::optimizer::Optimizer;
 use crate::vec_utils::*;
 use crate::wave_source::WaveSource;
 use crate::Vector3;
@@ -25,7 +26,7 @@ use ndarray_linalg::*;
 
 type Complex = c64;
 
-const REPEAT_SDP: usize = 200;
+const REPEAT_SDP: usize = 1000;
 const LAMBDA_SDP: f64 = 0.8;
 
 pub struct Horn {
@@ -113,15 +114,16 @@ impl Horn {
             .assign(&m.slice(s![.., (i + 1)..(col as isize + 1)]));
         r
     }
-
+}
+impl Optimizer for Horn {
     #[allow(clippy::many_single_char_names)]
-    pub fn optimize(&self, wave_source: &mut [WaveSource]) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
         let mut rng = thread_rng();
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
 
-        let alpha = 1e-5;
+        let alpha = 1e-3;
         let m = foci.len();
         let n = num_trans;
         let mut b = Array::zeros((m, n));
@@ -195,7 +197,11 @@ impl Horn {
             max_coeff = max_coeff.max(v.abs());
         }
         for j in 0..n {
-            let amp = q[j].abs() / max_coeff;
+            let amp = match (include_amp, normalize) {
+                (false, _) => 1.0,
+                (_, true) => q[j].abs() / max_coeff,
+                (_, false) => q[j].abs().min(1.0),
+            };
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp as f32;
             wave_source[j].phase = phase as f32;

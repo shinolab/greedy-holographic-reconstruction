@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 09/07/2020
+Last Modified: 13/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -15,7 +15,7 @@ Copyright (c) 2020 Hapis Lab. All rights reserved.
 from enum import IntEnum
 
 import ctypes
-from ctypes import c_void_p, byref, c_ulong, c_int, POINTER, c_float, c_double
+from ctypes import c_void_p, byref, c_ulong, c_int, POINTER, c_float, c_double, c_bool
 import numpy as np
 
 from . import nativemethods
@@ -176,18 +176,7 @@ class CpuCalculator(Calculator):
 
 class Optimizer():
     @staticmethod
-    def greedy_full_search(calculate: Calculator, points, division):
-        size = len(points)
-        points_array = np.zeros([size * 3]).astype(np.float32)
-        for i, focus in enumerate(points):
-            points_array[3 * i] = focus[0]
-            points_array[3 * i + 1] = focus[1]
-            points_array[3 * i + 2] = focus[2]
-        points_array = np.ctypeslib.as_ctypes(points_array)
-        nativemethods.GHR_DLL.GHR_GreedyFullSearch(calculate.handle, points_array, c_ulong(size), c_ulong(division))
-
-    @staticmethod
-    def horn(calculate: Calculator, foci, amps, wave_len):
+    def greedy_brute_force(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -197,10 +186,10 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_Horn(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_GreedyBruteForce(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))
 
     @staticmethod
-    def long2014(calculate: Calculator, foci, amps, wave_len):
+    def horn(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -210,10 +199,10 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_Long(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_Horn(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))
 
     @staticmethod
-    def levenberg_marquardt(calculate: Calculator, foci, amps, wave_len):
+    def long2014(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -223,4 +212,17 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_LM(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_Long(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))
+
+    @staticmethod
+    def levenberg_marquardt(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
+        size = len(foci)
+        amps = np.array(amps).astype(np.float64)
+        amps = np.ctypeslib.as_ctypes(amps)
+        foci_array = np.zeros([size * 3]).astype(np.float32)
+        for i, focus in enumerate(foci):
+            foci_array[3 * i] = focus[0]
+            foci_array[3 * i + 1] = focus[1]
+            foci_array[3 * i + 2] = focus[2]
+        foci_array = np.ctypeslib.as_ctypes(foci_array)
+        nativemethods.GHR_DLL.GHR_LM(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))

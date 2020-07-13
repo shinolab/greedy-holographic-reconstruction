@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 13/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,6 +13,7 @@
 
 use std::f64::consts::PI;
 
+use super::Optimizer;
 use crate::vec_utils::*;
 use crate::wave_source::WaveSource;
 use crate::Vector3;
@@ -50,9 +51,11 @@ impl Long {
     fn adjoint(m: &Array2<Complex>) -> Array2<Complex> {
         m.t().mapv(|c| c.conj())
     }
+}
 
+impl Optimizer for Long {
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    pub fn optimize(&self, wave_source: &mut [WaveSource]) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
@@ -121,7 +124,11 @@ impl Long {
             max_coeff = max_coeff.max(v.abs());
         }
         for j in 0..n {
-            let amp = q[j].abs() / max_coeff;
+            let amp = match (include_amp, normalize) {
+                (false, _) => 1.0,
+                (_, true) => q[j].abs() / max_coeff,
+                (_, false) => q[j].abs().min(1.0),
+            };
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp as f32;
             wave_source[j].phase = phase as f32;
