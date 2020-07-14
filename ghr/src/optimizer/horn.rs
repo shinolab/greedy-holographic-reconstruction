@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 13/07/2020
+ * Last Modified: 14/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -157,13 +157,14 @@ impl Optimizer for Horn {
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
             let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
-            let xb = xc * &mmc;
+            let l = mmc.len();
+            let xb = xc.dot(&mmc).into_shape((l, 1)).unwrap();
             let gamma = Self::adjoint(&xb).dot(&mmc);
             let gamma = gamma[0];
             if gamma.re > 0. {
                 let xb = xb * (-(lambda / gamma.re).sqrt());
                 x.slice_mut(s![ii, 0..ii])
-                    .assign(&xb.slice(s![0, 0..ii]).mapv(|c| c.conj()));
+                    .assign(&xb.slice(s![0..ii, 0]).mapv(|c| c.conj()));
                 x.slice_mut(s![ii, (ii + 1)..])
                     .assign(&xb.slice(s![ii.., 0]).mapv(|c| c.conj()));
                 x.slice_mut(s![0..ii, ii]).assign(&xb.slice(s![0..ii, 0]));

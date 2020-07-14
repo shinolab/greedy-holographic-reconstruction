@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 13/07/2020
+ * Last Modified: 14/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -69,12 +69,13 @@ fn main() {
     }
     calculator.add_wave_sources(&transducers);
 
-    let target_pos = vec![
-        add(focal_pos, [20., 0., 0.]),
-        sub(focal_pos, [20., 0., 0.]),
-        add(focal_pos, [0., 20., 0.]),
-        sub(focal_pos, [0., 20., 0.]),
-    ];
+    let num = 20;
+    let rad = 30.0;
+    let mut target_pos = Vec::with_capacity(num);
+    for i in 0..num {
+        let t = 2. * PI * i as f32 / num as f32;
+        target_pos.push(add(focal_pos, [rad * t.cos(), rad * t.sin(), 0.]));
+    }
     let mut amps = Vec::with_capacity(target_pos.len());
     for _ in 0..target_pos.len() {
         amps.push(1.0);
@@ -111,7 +112,7 @@ fn main() {
     write_image!("xy_long.png", buffer, bb);
 
     let lm = LM::new(target_pos, amps, WAVE_LENGTH as f64);
-    lm.optimize(calculator.wave_sources(), true, true);
+    lm.optimize(calculator.wave_sources(), false, true);
     buffer.calculate(&calculator);
     write_image!("xy_lm.png", buffer, bb);
 }
