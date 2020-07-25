@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 14/07/2020
+ * Last Modified: 26/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -69,8 +69,8 @@ fn main() {
     }
     calculator.add_wave_sources(&transducers);
 
-    let num = 20;
-    let rad = 30.0;
+    let num = 5;
+    let rad = 40.0;
     let mut target_pos = Vec::with_capacity(num);
     for i in 0..num {
         let t = 2. * PI * i as f32 / num as f32;
@@ -96,23 +96,28 @@ fn main() {
 
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
+
     let optimizer = GreedyBruteForce::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     optimizer.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
+    println!("GBS: {}", buffer.max());
     write_image!("xy_ghr_p.png", buffer, bb);
 
     let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     horn.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
+    println!("HORN: {}", buffer.max());
     write_image!("xy_horn.png", buffer, bb);
 
     let long = Long::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
     long.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
+    println!("LONG: {}", buffer.max());
     write_image!("xy_long.png", buffer, bb);
 
     let lm = LM::new(target_pos, amps, WAVE_LENGTH as f64);
     lm.optimize(calculator.wave_sources(), false, true);
     buffer.calculate(&calculator);
+    println!("LM: {}", buffer.max());
     write_image!("xy_lm.png", buffer, bb);
 }
