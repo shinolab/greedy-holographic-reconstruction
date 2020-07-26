@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 14/07/2020
+Last Modified: 26/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -19,22 +19,38 @@ import mpl_toolkits.axes_grid1
 
 from ghr import CpuCalculator, BufferBuilder, plot_helper, FieldType, Optimizer
 
-NUM_TRANS_X = 36
-NUM_TRANS_Y = 36
+NUM_TRANS_X = 18
+NUM_TRANS_Y = 14
 TRANS_SIZE = 10
 WAVE_LENGTH = 8.5
 Z = 150
 R = 100.0
 
 
-def plot_phase_xy(optimizer, wave_sources, name, ext='png'):
+def setup_pyplot():
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['axes.grid'] = False
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    plt.rcParams['xtick.major.width'] = 1.0
+    plt.rcParams['ytick.major.width'] = 1.0
+    plt.rcParams['font.size'] = 14
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = 'Arial'
+    plt.rcParams["mathtext.fontset"] = 'stixsans'
+    plt.rcParams['ps.useafm'] = True
+    plt.rcParams['pdf.use14corefonts'] = True
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{sfmath}'
+
+
+def plot_phase_xy(wave_sources, name, ext='pdf'):
     # Observe properties, units are mm
     X_RANGE = (TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 + R / 2)
     Y_RANGE = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
-    RESOLUTION = 1.0
+    RESOLUTION = 0.5
 
     # show phases
-    DPI = 300
+    DPI = 72
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
 
@@ -48,18 +64,26 @@ def plot_phase_xy(optimizer, wave_sources, name, ext='png'):
         .y_range(Y_RANGE)\
         .z_at(Z)\
         .resolution(RESOLUTION)\
-        .generate(FieldType.Power)
+        .generate(FieldType.Pressure)
     buffer.calculate(calculator)
 
     # plot
+    ticks_step = 10.0
     bounds = buffer.bounds()
     array = buffer.get_array().reshape(bounds[0], bounds[1])
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
-    heat_map = plot_helper.plot_acoustic_field_2d(axes, array, X_RANGE, Y_RANGE, RESOLUTION, ticks_step=10.0)
+    heat_map = plot_helper.plot_acoustic_field_2d(axes, array, X_RANGE, Y_RANGE, RESOLUTION, ticks_step=ticks_step)
+    x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
+    y_label_num = int(math.floor((Y_RANGE[1] - Y_RANGE[0]) / ticks_step)) + 1
+    x_labels = [-(X_RANGE[1] - X_RANGE[0]) / 2 + ticks_step * i for i in range(x_label_num)]
+    y_labels = [-(Y_RANGE[1] - Y_RANGE[0]) / 2 + ticks_step * i for i in range(y_label_num)]
+    axes.set_xticklabels(x_labels, minor=False, fontsize=12)
+    axes.set_yticklabels(y_labels, minor=False, fontsize=12)
     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
     cax = divider.append_axes('right', '5%', pad='3%')
     fig.colorbar(heat_map, cax=cax)
+    plt.tight_layout()
     plt.savefig('xy_' + name + '.' + ext)
 
 
@@ -125,40 +149,59 @@ if __name__ == '__main__':
     calculator.update_amp_phase()
     calculator.update_source_geometry()
 
-    # SMILE
-    radius = 45.0
-    num = 30
-    target_pos = []
-    for i in range(num):
-        theta = 2 * math.pi * i / num
-        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
-    target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
-    for i in range(1, num // 4):
-        theta = -math.pi * i / (num // 4)
-        target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    amps = np.ones(len(target_pos))
+    # # SMILE
+    # radius = 45.0
+    # num = 30
+    # target_pos = []
+    # for i in range(num):
+    #     theta = 2 * math.pi * i / num
+    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    # target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
+    # target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
+    # for i in range(1, num // 4):
+    #     theta = -math.pi * i / (num // 4)
+    #     target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    # amps = 2.0 * np.ones(len(target_pos))
 
     # target_pos = []
     # target_pos.append(center + np.array([-20.0, 0.0, 0]))
     # target_pos.append(center + np.array([20.0, 0.0, 0]))
     # amps = np.array([4.0, 2.0])
 
-    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    plot_phase_xy(optimizer, wave_sources, 'gbs')
-    plot_phase_x(optimizer, wave_sources, 'gbs_x')
+    # SMILE
+    radius = 40.0
+    num = 5
+    target_pos = []
+    for i in range(num):
+        theta = 2 * math.pi * i / num
+        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    amps = 1.0 * np.ones(len(target_pos))
+
+    setup_pyplot()
+
+    # optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    # plot_phase_xy(optimizer, wave_sources, 'gbs_m1_p1')
+    # plot_phase_x(optimizer, wave_sources, 'gbs_x')
 
     # ######### HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    plot_phase_xy(optimizer, wave_sources, 'horn')
-    plot_phase_x(optimizer, wave_sources, 'horn_x')
+    # optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    # plot_phase_xy(optimizer, wave_sources, 'horn_m1')
+    # plot_phase_x(optimizer, wave_sources, 'horn_x')
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    plot_phase_xy(optimizer, wave_sources, 'long')
-    plot_phase_x(optimizer, wave_sources, 'long_x')
+    # optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    # plot_phase_xy(optimizer, wave_sources, 'long_m1')
+    # plot_phase_x(optimizer, wave_sources, 'long_x')
 
-    # ######## Levenberg Marquardt #####################
-    optimizer = Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    plot_phase_xy(optimizer, wave_sources, 'lm')
-    plot_phase_x(optimizer, wave_sources, 'lm_x')
+    # ####### Levenberg Marquardt #####################
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    plot_phase_xy(wave_sources, 'lm', ext='png')
+
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'lm_amp', ext='png')
+    # ####### Levenberg Marquardt #####################
+    Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    plot_phase_xy(wave_sources, 'gd', ext='png')
+
+    Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'gd_amp', ext='png')

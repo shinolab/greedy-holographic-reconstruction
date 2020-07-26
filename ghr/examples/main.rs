@@ -115,9 +115,15 @@ fn main() {
     println!("LONG: {}", buffer.max());
     write_image!("xy_long.png", buffer, bb);
 
-    let lm = LM::new(target_pos, amps, WAVE_LENGTH as f64);
-    lm.optimize(calculator.wave_sources(), false, true);
+    let lm = LM::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    lm.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     println!("LM: {}", buffer.max());
     write_image!("xy_lm.png", buffer, bb);
+
+    let gd = GD::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    gd.optimize(calculator.wave_sources(), true, true);
+    buffer.calculate(&calculator);
+    println!("GD: {}", buffer.max());
+    write_image!("xy_gd.png", buffer, bb);
 }

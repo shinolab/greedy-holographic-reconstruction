@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 13/07/2020
+ * Last Modified: 26/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -93,5 +93,24 @@ pub unsafe extern "C" fn GHR_LM(
     let amps = std::slice::from_raw_parts(amps, len);
     let lm = LM::new(foci.to_vec(), amps.to_vec(), wave_len);
     lm.optimize((*calc).wave_sources(), include_amp, normalize);
+    forget(calc);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn GHR_GD(
+    handle: *mut c_void,
+    foci: *const c_void,
+    amps: *const f64,
+    size: u64,
+    wave_len: f64,
+    include_amp: bool,
+    normalize: bool,
+) {
+    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
+    let len = size as usize;
+    let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
+    let amps = std::slice::from_raw_parts(amps, len);
+    let gd = GD::new(foci.to_vec(), amps.to_vec(), wave_len);
+    gd.optimize((*calc).wave_sources(), include_amp, normalize);
     forget(calc);
 }
