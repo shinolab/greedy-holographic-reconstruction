@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/07/2020
+ * Last Modified: 28/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -163,10 +163,12 @@ impl LM {
 
 impl Optimizer for LM {
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], _include_amp: bool, normalize: bool) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
+
+        let include_amp = false;
 
         let m = foci.len();
         let n = num_trans;

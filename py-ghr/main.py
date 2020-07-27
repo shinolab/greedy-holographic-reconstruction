@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 26/07/2020
+Last Modified: 27/07/2020
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -19,8 +19,8 @@ import mpl_toolkits.axes_grid1
 
 from ghr import CpuCalculator, BufferBuilder, plot_helper, FieldType, Optimizer
 
-NUM_TRANS_X = 18
-NUM_TRANS_Y = 14
+NUM_TRANS_X = 36
+NUM_TRANS_Y = 36
 TRANS_SIZE = 10
 WAVE_LENGTH = 8.5
 Z = 150
@@ -64,7 +64,7 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
         .y_range(Y_RANGE)\
         .z_at(Z)\
         .resolution(RESOLUTION)\
-        .generate(FieldType.Pressure)
+        .generate(FieldType.Power)
     buffer.calculate(calculator)
 
     # plot
@@ -149,33 +149,33 @@ if __name__ == '__main__':
     calculator.update_amp_phase()
     calculator.update_source_geometry()
 
-    # # SMILE
-    # radius = 45.0
-    # num = 30
-    # target_pos = []
-    # for i in range(num):
-    #     theta = 2 * math.pi * i / num
-    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
-    # target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
-    # for i in range(1, num // 4):
-    #     theta = -math.pi * i / (num // 4)
-    #     target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # amps = 2.0 * np.ones(len(target_pos))
+    # SMILE
+    radius = 45.0
+    num = 30
+    target_pos = []
+    for i in range(num):
+        theta = 2 * math.pi * i / num
+        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
+    target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
+    for i in range(1, num // 4):
+        theta = -math.pi * i / (num // 4)
+        target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    amps = 2.0 * np.ones(len(target_pos))
 
     # target_pos = []
     # target_pos.append(center + np.array([-20.0, 0.0, 0]))
     # target_pos.append(center + np.array([20.0, 0.0, 0]))
     # amps = np.array([4.0, 2.0])
 
-    # SMILE
-    radius = 40.0
-    num = 5
-    target_pos = []
-    for i in range(num):
-        theta = 2 * math.pi * i / num
-        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    amps = 1.0 * np.ones(len(target_pos))
+    # # SMILE
+    # radius = 40.0
+    # num = 5
+    # target_pos = []
+    # for i in range(num):
+    #     theta = 2 * math.pi * i / num
+    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    # amps = 1.0 * np.ones(len(target_pos))
 
     setup_pyplot()
 
@@ -195,13 +195,13 @@ if __name__ == '__main__':
 
     # ####### Levenberg Marquardt #####################
     Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    plot_phase_xy(wave_sources, 'lm', ext='png')
+    plot_phase_xy(wave_sources, 'lm', ext='pdf')
 
-    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    plot_phase_xy(wave_sources, 'lm_amp', ext='png')
-    # ####### Levenberg Marquardt #####################
-    Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    plot_phase_xy(wave_sources, 'gd', ext='png')
+    # Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    # plot_phase_xy(wave_sources, 'lm_amp', ext='png')
+    # # ####### Levenberg Marquardt #####################
+    # Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    # plot_phase_xy(wave_sources, 'gd', ext='png')
 
-    Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    plot_phase_xy(wave_sources, 'gd_amp', ext='png')
+    # Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    # plot_phase_xy(wave_sources, 'gd_amp', ext='png')

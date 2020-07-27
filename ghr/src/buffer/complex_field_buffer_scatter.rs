@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 27/07/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -14,6 +14,7 @@
 use crate::buffer::bounds::Bounds;
 use crate::buffer::dimension::Dimension;
 use crate::buffer::traits::*;
+use crate::calculator::*;
 use crate::Vector3;
 use ndarray_linalg::*;
 
@@ -65,5 +66,14 @@ impl FieldBuffer for ComplexFieldBufferScatter {
 
     fn observe_points(&self) -> Box<dyn Iterator<Item = Vector3>> {
         Box::new(self.observe_points.clone().into_iter())
+    }
+}
+
+impl<C> Calculate<C> for ComplexFieldBufferScatter
+where
+    C: ComplexFieldCalculator + ?Sized,
+{
+    fn calculate(&mut self, calculator: &C) {
+        calculator.calc_complex(self);
     }
 }
