@@ -79,7 +79,7 @@ macro_rules! measure {
                     amps.push(1.0);
                 }
                 let optimizer = <$opt>::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-                optimizer.optimize(calculator.wave_sources());
+                optimizer.optimize(calculator.wave_sources(), false, true);
             },
             100
         );
@@ -90,44 +90,26 @@ macro_rules! measure {
 fn main() {
     let n_sqrt = 10;
     let m_max_pow = 10;
+    let n_max_pow = 16;
 
-    // GHRBF PHASE
-    {
-        println!("Greedy Holographic Reconstruction with phase");
-        let file_path = "ghr_p.csv";
-        let mut wtr = csv::Writer::from_path(file_path).unwrap();
-        wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-        for i in 1..=m_max_pow {
-            let m = 1 << i;
-            println!("{}", m);
-            let millis = measure!(GreedyBruteForcePhase, m, n_sqrt);
-            wtr.write_record(&[
-                (n_sqrt * n_sqrt).to_string(),
-                (m).to_string(),
-                millis.to_string(),
-            ])
-            .unwrap();
-        }
-    }
-
-    // GHRBF PHASE and AMP
-    {
-        println!("Greedy Holographic Reconstruction with phase and amp");
-        let file_path = "ghr_pa.csv";
-        let mut wtr = csv::Writer::from_path(file_path).unwrap();
-        wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-        for i in 1..=m_max_pow {
-            let m = 1 << i;
-            println!("{}", m);
-            let millis = measure!(GreedyBruteForcePhaseAmp, m, n_sqrt);
-            wtr.write_record(&[
-                (n_sqrt * n_sqrt).to_string(),
-                (m).to_string(),
-                millis.to_string(),
-            ])
-            .unwrap();
-        }
-    }
+    // // GHRBF PHASE
+    // {
+    //     println!("Greedy Holographic Reconstruction with phase");
+    //     let file_path = "ghr_p.csv";
+    //     let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    //     wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    //     for i in 1..=m_max_pow {
+    //         let m = 1 << i;
+    //         println!("{}", m);
+    //         let millis = measure!(GreedyBruteForce, m, n_sqrt);
+    //         wtr.write_record(&[
+    //             (n_sqrt * n_sqrt).to_string(),
+    //             (m).to_string(),
+    //             millis.to_string(),
+    //         ])
+    //         .unwrap();
+    //     }
+    // }
 
     // // Long
     // println!("Long te al, 2014");
@@ -163,20 +145,34 @@ fn main() {
     //     .unwrap();
     // }
 
-    // // LM
-    // println!("Levenberg-Marquardt");
-    // let file_path = "lm.csv";
-    // let mut wtr = csv::Writer::from_path(file_path).unwrap();
-    // wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
-    // for i in 1..=m_max_pow {
-    //     let m = 1 << i;
-    //     println!("{}", m);
-    //     let millis = measure!(LM, m, n_sqrt);
-    //     wtr.write_record(&[
-    //         (n_sqrt * n_sqrt).to_string(),
-    //         (1 << i).to_string(),
-    //         millis.to_string(),
-    //     ])
-    //     .unwrap();
-    // }
+    // LM
+    println!("Levenberg-Marquardt");
+    let file_path = "gbs_M.csv";
+    let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    for i in 1..=m_max_pow {
+        let m = 1 << i;
+        println!("m: {}", m);
+        let millis = measure!(GreedyBruteForce, m, n_sqrt);
+        wtr.write_record(&[
+            (n_sqrt * n_sqrt).to_string(),
+            (1 << i).to_string(),
+            millis.to_string(),
+        ])
+        .unwrap();
+    }
+
+    // LM
+    println!("Levenberg-Marquardt");
+    let file_path = "gbs_N.csv";
+    let mut wtr = csv::Writer::from_path(file_path).unwrap();
+    wtr.write_record(&["N", "M", "time[ms]"]).unwrap();
+    for i in 1..=n_max_pow {
+        let n = 2 * i;
+        let m = 128;
+        println!("n: {}", n * n);
+        let millis = measure!(GreedyBruteForce, 128, n);
+        wtr.write_record(&[(n * n).to_string(), m.to_string(), millis.to_string()])
+            .unwrap();
+    }
 }

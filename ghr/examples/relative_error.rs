@@ -26,7 +26,7 @@ use std::f32::consts::PI;
 const SOURCE_SIZE: f32 = 10.0;
 const WAVE_LENGTH: f32 = 8.5;
 
-const N_SQRT: usize = 36;
+const N_SQRT: usize = 20;
 
 macro_rules! calc_p1 {
     ($f: ident) => {{
@@ -99,9 +99,9 @@ macro_rules! relative_error {
 
         let mut rng = rand::thread_rng();
         let mut gbf_es = Vec::with_capacity($iter);
-        let mut horn_es = Vec::with_capacity($iter);
-        let mut long_es = Vec::with_capacity($iter);
-        let mut lm_es = Vec::with_capacity($iter);
+        // let mut horn_es = Vec::with_capacity($iter);
+        // let mut long_es = Vec::with_capacity($iter);
+        // let mut lm_es = Vec::with_capacity($iter);
         for _ in 0..$iter {
             let mut target_pos = Vec::with_capacity($m);
             for _ in 0..$m {
@@ -121,15 +121,16 @@ macro_rules! relative_error {
             }
 
             let bgf_e = calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m);
-            let horn_e = calc_relative_error!(Horn, target_pos, amps, calculator, $m);
-            let long_e = calc_relative_error!(Long, target_pos, amps, calculator, $m);
-            let lm_e = calc_relative_error!(LM, target_pos, amps, calculator, $m);
+            // let horn_e = calc_relative_error!(Horn, target_pos, amps, calculator, $m);
+            // let long_e = calc_relative_error!(Long, target_pos, amps, calculator, $m);
+            // let lm_e = calc_relative_error!(LM, target_pos, amps, calculator, $m);
             gbf_es.push(bgf_e);
-            horn_es.push(horn_e);
-            long_es.push(long_e);
-            lm_es.push(lm_e);
+            // horn_es.push(horn_e);
+            // long_es.push(long_e);
+            // lm_es.push(lm_e);
         }
-        (gbf_es, horn_es, long_es, lm_es)
+        // (gbf_es, horn_es, long_es, lm_es)
+        gbf_es
     }};
 }
 
@@ -150,35 +151,38 @@ fn get_max(vec: &[f64]) -> f64 {
     tmp
 }
 
+fn get_min(vec: &[f64]) -> f64 {
+    let mut tmp = f64::INFINITY;
+    for &v in vec {
+        tmp = tmp.min(v);
+    }
+    tmp
+}
+
 fn main() {
     let mut wtr_mean = csv::Writer::from_path("relative_error_mean.csv").unwrap();
     let mut wtr_max = csv::Writer::from_path("relative_error_max.csv").unwrap();
-    wtr_mean
-        .write_record(&["M", "GBS", "HORN", "LONG", "LM"])
-        .unwrap();
-    wtr_max
-        .write_record(&["M", "GBS", "HORN", "LONG", "LM"])
-        .unwrap();
+    let mut wtr_min = csv::Writer::from_path("relative_error_min.csv").unwrap();
+    wtr_mean.write_record(&["M", "GBS256"]).unwrap();
+    wtr_max.write_record(&["M", "GBS256"]).unwrap();
+    wtr_min.write_record(&["M", "GBS256"]).unwrap();
 
-    for m in 2..=100 {
-        let (gbf_es, horn_es, long_es, lm_es) = relative_error!(m, 100);
+    use std::time::Instant;
+    for m in (1..=25).map(|i| i * 2) {
+        let start = Instant::now();
+        println!("M: {}...", m);
+        // let (gbf_es, horn_es, long_es, lm_es) = relative_error!(m, 100);
+        let gbf_es = relative_error!(m, 100);
         wtr_mean
-            .write_record(&[
-                m.to_string(),
-                get_mean(&gbf_es).to_string(),
-                get_mean(&horn_es).to_string(),
-                get_mean(&long_es).to_string(),
-                get_mean(&lm_es).to_string(),
-            ])
+            .write_record(&[m.to_string(), get_mean(&gbf_es).to_string()])
             .unwrap();
         wtr_max
-            .write_record(&[
-                m.to_string(),
-                get_max(&gbf_es).to_string(),
-                get_max(&horn_es).to_string(),
-                get_max(&long_es).to_string(),
-                get_max(&lm_es).to_string(),
-            ])
+            .write_record(&[m.to_string(), get_max(&gbf_es).to_string()])
             .unwrap();
+        wtr_min
+            .write_record(&[m.to_string(), get_min(&gbf_es).to_string()])
+            .unwrap();
+        let end = start.elapsed();
+        println!("{}.{:03}", end.as_secs(), end.subsec_nanos() / 1_000_000);
     }
 }

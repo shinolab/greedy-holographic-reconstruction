@@ -22,7 +22,7 @@ use ndarray_linalg::*;
 
 type Complex = c32;
 const PHASE_DIV: usize = 16;
-const AMP_DIV: usize = 16;
+const AMP_DIV: usize = 1;
 
 fn transfer(
     buffer: &ComplexFieldBufferScatter,
