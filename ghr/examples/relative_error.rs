@@ -66,10 +66,25 @@ macro_rules! calc_relative_error {
         buffer.calculate(&$calculator);
         let demoni = amp * $m as f64;
         let mut numerator = 0.0;
+        let mut max_v = f64::NEG_INFINITY;
+        for b in buffer.buffer() {
+            max_v = max_v.max(b.abs() as f64);
+        }
+        let mut mean_v = 0.0;
         for b in buffer.buffer() {
             numerator += (b.abs() as f64 - amp).abs();
+            let norm_v = b.abs() as f64 / max_v;
+            mean_v += norm_v;
         }
-        numerator / demoni * 100.0
+        mean_v /= buffer.buffer().len() as f64;
+
+        let mut var = 0.0;
+        for b in buffer.buffer() {
+            let norm_v = b.abs() as f64 / max_v;
+            var += (norm_v - mean_v) * (norm_v - mean_v);
+        }
+        var /= buffer.buffer().len() as f64;
+        (numerator / demoni * 100.0, var)
     }};
 }
 
@@ -99,9 +114,15 @@ macro_rules! relative_error {
 
         let mut rng = rand::thread_rng();
         let mut gbf_es = Vec::with_capacity($iter);
-        // let mut horn_es = Vec::with_capacity($iter);
-        // let mut long_es = Vec::with_capacity($iter);
-        // let mut lm_es = Vec::with_capacity($iter);
+        let mut horn_es = Vec::with_capacity($iter);
+        let mut long_es = Vec::with_capacity($iter);
+        let mut lm_es = Vec::with_capacity($iter);
+
+        let mut gbf_vars = Vec::with_capacity($iter);
+        let mut horn_vars = Vec::with_capacity($iter);
+        let mut long_vars = Vec::with_capacity($iter);
+        let mut lm_vars = Vec::with_capacity($iter);
+
         for _ in 0..$iter {
             let mut target_pos = Vec::with_capacity($m);
             for _ in 0..$m {
@@ -120,17 +141,25 @@ macro_rules! relative_error {
                 amps.push(amp);
             }
 
-            let bgf_e = calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m);
-            // let horn_e = calc_relative_error!(Horn, target_pos, amps, calculator, $m);
-            // let long_e = calc_relative_error!(Long, target_pos, amps, calculator, $m);
-            // let lm_e = calc_relative_error!(LM, target_pos, amps, calculator, $m);
+            let (bgf_e, bgf_var) =
+                calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m);
+            let (horn_e, horn_var) = calc_relative_error!(Horn, target_pos, amps, calculator, $m);
+            let (long_e, long_var) = calc_relative_error!(Long, target_pos, amps, calculator, $m);
+            let (lm_e, lm_var) = calc_relative_error!(LM, target_pos, amps, calculator, $m);
             gbf_es.push(bgf_e);
-            // horn_es.push(horn_e);
-            // long_es.push(long_e);
-            // lm_es.push(lm_e);
+            horn_es.push(horn_e);
+            long_es.push(long_e);
+            lm_es.push(lm_e);
+
+            gbf_vars.push(bgf_var);
+            horn_vars.push(horn_var);
+            long_vars.push(long_var);
+            lm_vars.push(lm_var);
         }
-        // (gbf_es, horn_es, long_es, lm_es)
-        gbf_es
+        (
+            vec![gbf_es, horn_es, long_es, lm_es],
+            vec![gbf_vars, horn_vars, long_vars, lm_vars],
+        )
     }};
 }
 
@@ -159,30 +188,54 @@ fn get_min(vec: &[f64]) -> f64 {
     tmp
 }
 
+fn write_header<T: std::io::Write>(wtr: &mut csv::Writer<T>, header: &[&str]) {
+    let mut vh = Vec::with_capacity(1 + header.len() * 3);
+    vh.push("M".to_owned());
+    for &h in header {
+        vh.push(h.to_owned() + "_mean");
+        vh.push(h.to_owned() + "_max");
+        vh.push(h.to_owned() + "_min");
+    }
+    wtr.write_record(&vh).unwrap();
+}
+
+fn format_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, m: usize, vec: &Vec<Vec<f64>>) {
+    let mut vh = Vec::with_capacity(1 + vec.len() * 3);
+    vh.push(m.to_string());
+    for v in vec {
+        vh.push(get_mean(v).to_string());
+        vh.push(get_max(v).to_string());
+        vh.push(get_min(v).to_string());
+    }
+    wtr.write_record(&vh).unwrap();
+}
+
 fn main() {
-    let mut wtr_mean = csv::Writer::from_path("relative_error_mean.csv").unwrap();
-    let mut wtr_max = csv::Writer::from_path("relative_error_max.csv").unwrap();
-    let mut wtr_min = csv::Writer::from_path("relative_error_min.csv").unwrap();
-    wtr_mean.write_record(&["M", "GBS256"]).unwrap();
-    wtr_max.write_record(&["M", "GBS256"]).unwrap();
-    wtr_min.write_record(&["M", "GBS256"]).unwrap();
+    let mut wtr_error = csv::Writer::from_path("relative_error.csv").unwrap();
+    let mut wtr_var = csv::Writer::from_path("var.csv").unwrap();
+    let header = ["GBF16", "HORN", "LONG", "LM"];
+    write_header(&mut wtr_error, &header);
+    write_header(&mut wtr_var, &header);
 
     use std::time::Instant;
-    for m in (1..=25).map(|i| i * 2) {
+    for m in (1..=2).map(|i| i * 2) {
         let start = Instant::now();
         println!("M: {}...", m);
-        // let (gbf_es, horn_es, long_es, lm_es) = relative_error!(m, 100);
-        let gbf_es = relative_error!(m, 100);
-        wtr_mean
-            .write_record(&[m.to_string(), get_mean(&gbf_es).to_string()])
-            .unwrap();
-        wtr_max
-            .write_record(&[m.to_string(), get_max(&gbf_es).to_string()])
-            .unwrap();
-        wtr_min
-            .write_record(&[m.to_string(), get_min(&gbf_es).to_string()])
-            .unwrap();
+        let (es_vec, vars_vec) = relative_error!(m, 100);
         let end = start.elapsed();
-        println!("{}.{:03}", end.as_secs(), end.subsec_nanos() / 1_000_000);
+        println!(
+            "  calc: {}.{:03}",
+            end.as_secs(),
+            end.subsec_nanos() / 1_000_000
+        );
+        format_data(&mut wtr_error, m, &es_vec);
+        format_data(&mut wtr_var, m, &vars_vec);
+
+        let end = start.elapsed();
+        println!(
+            "  write: {}.{:03}",
+            end.as_secs(),
+            end.subsec_nanos() / 1_000_000
+        );
     }
 }
