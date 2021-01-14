@@ -14,38 +14,16 @@
 use rayon::prelude::*;
 
 use super::*;
-use crate::buffer::{
-    AmplitudeFieldBuffer, ComplexFieldBufferScatter, FieldBuffer, IntensityFieldBuffer,
+use crate::{
+    buffer::{AmplitudeFieldBuffer, ComplexFieldBufferScatter, FieldBuffer, IntensityFieldBuffer},
+    utils::transfer,
+    wave_source::WaveSource,
+    Complex, PI,
 };
-use crate::vec_utils::*;
-use crate::wave_source::WaveSource;
-
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
-use std::f32::consts::PI;
-
-use ndarray_linalg::*;
-
-type Complex = c32;
-
-#[derive(PartialEq, Debug)]
-struct MinFloat(f32);
-impl Eq for MinFloat {}
-impl PartialOrd for MinFloat {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        other.0.partial_cmp(&self.0)
-    }
-}
-impl Ord for MinFloat {
-    fn cmp(&self, other: &MinFloat) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
 
 pub struct CpuCalculator {
     sources: Vec<WaveSource>,
     wave_num: f32,
-    accurate_mode: bool,
 }
 
 impl CpuCalculator {
@@ -53,12 +31,7 @@ impl CpuCalculator {
         CpuCalculator {
             sources: vec![],
             wave_num: 2.0 * PI / 8.5,
-            accurate_mode: false,
         }
-    }
-
-    pub fn set_accurate_mode(&mut self, active: bool) {
-        self.accurate_mode = active;
     }
 }
 
@@ -78,44 +51,8 @@ macro_rules! calc_from_complex_wave {
             .map(|&observe_point| {
                 let mut $val = Complex::new(0., 0.);
                 for source in $self.sources.iter() {
-                    let diff = sub(observe_point, source.pos);
-                    let dist = norm(diff);
-                    let r = source.amp / dist;
-                    let phi = source.phase - wave_num * dist;
-                    $val += Complex::from_polar(&r, &phi);
+                    $val += transfer(source.pos, observe_point, wave_num);
                 }
-                $exp
-            })
-            .collect_into_vec($buffer.buffer_mut());
-    }};
-}
-
-macro_rules! calc_from_complex_wave_accurate {
-    ($val: ident, $exp: expr, $self: ident, $buffer: ident) => {{
-        let wave_num = $self.wave_num;
-        $buffer
-            .observe_points()
-            .collect::<Vec<_>>()
-            .par_iter()
-            .map(|&observe_point| {
-                let mut re_heap = BinaryHeap::with_capacity($self.sources.len());
-                let mut im_heap = BinaryHeap::with_capacity($self.sources.len());
-                for source in $self.sources.iter() {
-                    let diff = sub(observe_point, source.pos);
-                    let dist = norm(diff);
-                    let r = source.amp / dist;
-                    let phi = source.phase - wave_num * dist;
-                    re_heap.push(MinFloat(r * phi.cos()));
-                    im_heap.push(MinFloat(r * phi.sin()));
-                }
-
-                let mut re = 0.0;
-                let mut im = 0.0;
-                for (r, i) in re_heap.iter().zip(im_heap.iter()) {
-                    re += r.0;
-                    im += i.0;
-                }
-                let $val = Complex::new(re, im);
                 $exp
             })
             .collect_into_vec($buffer.buffer_mut());
@@ -145,30 +82,18 @@ impl Calculator for CpuCalculator {
 
 impl ComplexFieldCalculator for CpuCalculator {
     fn calc_complex(&self, buffer: &mut ComplexFieldBufferScatter) {
-        if self.accurate_mode {
-            calc_from_complex_wave_accurate!(p, p, self, buffer);
-        } else {
-            calc_from_complex_wave!(p, p, self, buffer);
-        }
+        calc_from_complex_wave!(p, p, self, buffer);
     }
 }
 
 impl IntensityFieldCalculator for CpuCalculator {
     fn calc_intensity(&self, buffer: &mut dyn IntensityFieldBuffer) {
-        if self.accurate_mode {
-            calc_from_complex_wave_accurate!(intensity, intensity.norm_sqr(), self, buffer);
-        } else {
-            calc_from_complex_wave!(p, p.norm_sqr(), self, buffer);
-        }
+        calc_from_complex_wave!(p, p.norm_sqr(), self, buffer);
     }
 }
 
 impl AmplitudeFieldCalculator for CpuCalculator {
     fn calc_amp(&self, buffer: &mut dyn AmplitudeFieldBuffer) {
-        if self.accurate_mode {
-            calc_from_complex_wave_accurate!(intensity, intensity.norm(), self, buffer);
-        } else {
-            calc_from_complex_wave!(p, p.norm_sqr().sqrt(), self, buffer);
-        }
+        calc_from_complex_wave!(p, p.norm_sqr().sqrt(), self, buffer);
     }
 }

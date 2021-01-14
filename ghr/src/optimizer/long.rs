@@ -11,26 +11,21 @@
  *
  */
 
-use std::f64::consts::PI;
-
-use super::Optimizer;
-use crate::vec_utils::*;
-use crate::wave_source::WaveSource;
-use crate::Vector3;
+use crate::{
+    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
+};
 
 use ndarray::*;
 use ndarray_linalg::*;
 
-type Complex = c64;
-
 pub struct Long {
     foci: Vec<Vector3>,
-    amps: Vec<f64>,
-    wave_length: f64,
+    amps: Vec<Float>,
+    wave_length: Float,
 }
 
 impl Long {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<f64>, wave_length: f64) -> Self {
+    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
         Self {
             foci,
             amps,
@@ -40,14 +35,6 @@ impl Long {
 }
 
 impl Long {
-    pub fn transfer(&self, trans_pos: Vector3, target_pos: Vector3) -> Complex {
-        let wave_length = self.wave_length;
-        let diff = sub(target_pos, trans_pos);
-        let dist = norm(diff);
-
-        1.0 / dist as f64 * (Complex::new(0., -2. * PI / wave_length * dist as f64)).exp()
-    }
-
     fn adjoint(m: &Array2<Complex>) -> Array2<Complex> {
         m.t().mapv(|c| c.conj())
     }
@@ -66,10 +53,12 @@ impl Optimizer for Long {
         let mut X = Array::zeros((n, m));
         let mut A = Array::zeros((m, n));
 
+        let wave_num = 2.0 * PI / self.wave_length;
+
         for i in 0..m {
             let fp = foci[i];
             for j in 0..n {
-                A[[i, j]] = self.transfer(wave_source[j].pos, fp);
+                A[[i, j]] = transfer(wave_source[j].pos, fp, wave_num);
             }
         }
 
@@ -105,7 +94,7 @@ impl Optimizer for Long {
             for i in 0..m {
                 sum += A[[i, j]].abs() * amps[i];
             }
-            sigma[[j, j]] = Complex::new((sum / m as f64).sqrt(), 0.0);
+            sigma[[j, j]] = Complex::new((sum / m as Float).sqrt(), 0.0);
         }
 
         let G = stack![Axis(0), A, sigma];
@@ -119,7 +108,7 @@ impl Optimizer for Long {
         let gtf = gt.dot(&f);
         let q = gtg.solve(&gtf).unwrap();
 
-        let mut max_coeff: f64 = 0.0;
+        let mut max_coeff: Float = 0.0;
         for v in q.iter() {
             max_coeff = max_coeff.max(v.abs());
         }
