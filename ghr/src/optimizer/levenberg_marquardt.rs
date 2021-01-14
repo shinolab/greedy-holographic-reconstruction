@@ -20,6 +20,7 @@ use crate::Vector3;
 
 use ndarray::*;
 use ndarray_linalg::*;
+use rand::Rng;
 
 type Complex = c64;
 
@@ -176,6 +177,11 @@ impl Optimizer for LM {
         let n_param = if include_amp { 2 * n + m } else { n + m };
 
         let mut x0: ArrayBase<OwnedRepr<f64>, _> = Array::zeros(n_param);
+        let mut rng = rand::thread_rng();
+        for i in 0..(n + m) {
+            x0[i] = rng.gen::<f64>() * 2.0 * PI;
+        }
+
         if include_amp {
             for i in 0..n {
                 x0[n + m + i] = 1.0;

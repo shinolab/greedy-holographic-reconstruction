@@ -146,9 +146,11 @@ macro_rules! relative_error {
             let (bgf_e, bgf_var) =
                 calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m, false);
             let (bgf1616_e, bgf1616_var) =
-                    calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m, true);
-            let (horn_e, horn_var) = calc_relative_error!(Horn, target_pos, amps, calculator, $m, true);
-            let (long_e, long_var) = calc_relative_error!(Long, target_pos, amps, calculator, $m, true);
+                calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m, true);
+            let (horn_e, horn_var) =
+                calc_relative_error!(Horn, target_pos, amps, calculator, $m, true);
+            let (long_e, long_var) =
+                calc_relative_error!(Long, target_pos, amps, calculator, $m, true);
             let (lm_e, lm_var) = calc_relative_error!(LM, target_pos, amps, calculator, $m, false);
             gbf_es.push(bgf_e);
             gbf1616_es.push(bgf1616_e);
