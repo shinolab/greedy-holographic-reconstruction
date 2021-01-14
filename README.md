@@ -11,4 +11,4 @@ For some reason, you need to specify OpenBLAS and LAPACK library path directly i
 
 # Author
 
-Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp), 2020
+Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp), 2020-
