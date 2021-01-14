@@ -17,8 +17,30 @@ extern crate itertools;
 pub mod buffer;
 pub mod calculator;
 pub mod optimizer;
+pub mod utils;
 pub mod vec_utils;
 pub mod wave_source;
 
-pub type Float = f32;
+#[cfg(feature = "double")]
+mod float {
+    use ndarray_linalg::*;
+
+    /// Floating-point number
+    pub type Float = f64;
+    pub type Complex = c64;
+
+    pub const PI: Float = std::f64::consts::PI;
+}
+
+#[cfg(not(feature = "double"))]
+mod float {
+    use ndarray_linalg::*;
+
+    /// Floating-point number
+    pub type Float = f32;
+    pub type Complex = c32;
+    pub const PI: Float = std::f32::consts::PI;
+}
+
+pub use float::*;
 pub type Vector3 = [Float; 3];

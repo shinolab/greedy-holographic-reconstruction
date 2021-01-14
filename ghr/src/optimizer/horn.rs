@@ -11,12 +11,9 @@
  *
  */
 
-use std::f64::consts::PI;
-
-use crate::optimizer::Optimizer;
-use crate::vec_utils::*;
-use crate::wave_source::WaveSource;
-use crate::Vector3;
+use crate::{
+    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
+};
 
 use num_traits::identities::Zero;
 use rand::{thread_rng, Rng};
@@ -24,21 +21,19 @@ use rand::{thread_rng, Rng};
 use ndarray::*;
 use ndarray_linalg::*;
 
-type Complex = c64;
-
 const REPEAT_SDP: usize = 1000;
-const LAMBDA_SDP: f64 = 0.8;
+const LAMBDA_SDP: Float = 0.8;
 
 pub struct Horn {
     foci: Vec<Vector3>,
-    amps: Vec<f64>,
-    wave_length: f64,
+    amps: Vec<Float>,
+    wave_length: Float,
     repeat: usize,
-    lambda: f64,
+    lambda: Float,
 }
 
 impl Horn {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<f64>, wave_length: f64) -> Self {
+    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
         Self {
             foci,
             amps,
@@ -48,7 +43,7 @@ impl Horn {
         }
     }
 
-    pub fn set_wave_length(&mut self, wave_length: f64) {
+    pub fn set_wave_length(&mut self, wave_length: Float) {
         self.wave_length = wave_length;
     }
 
@@ -56,20 +51,12 @@ impl Horn {
         self.repeat = repeat;
     }
 
-    pub fn set_lambda(&mut self, lambda: f64) {
+    pub fn set_lambda(&mut self, lambda: Float) {
         self.lambda = lambda;
     }
 }
 
 impl Horn {
-    pub fn transfer(&self, trans_pos: Vector3, target_pos: Vector3) -> Complex {
-        let wave_length = self.wave_length;
-        let diff = sub(target_pos, trans_pos);
-        let dist = norm(diff);
-
-        1.0 / dist as f64 * (Complex::new(0., -2. * PI / wave_length * dist as f64)).exp()
-    }
-
     fn adjoint(m: &Array2<Complex>) -> Array2<Complex> {
         m.t().mapv(|c| c.conj())
     }
@@ -128,11 +115,12 @@ impl Optimizer for Horn {
         let n = num_trans;
         let mut b = Array::zeros((m, n));
         let mut p = Array::zeros((m, m));
+        let wave_num = 2.0 * PI / self.wave_length;
         for i in 0..m {
             p[[i, i]] = Complex::new(amps[i], 0.);
             let tp = foci[i];
             for j in 0..n {
-                b[[i, j]] = self.transfer(wave_source[j].pos, tp);
+                b[[i, j]] = transfer(wave_source[j].pos, tp, wave_num);
             }
         }
 
@@ -153,7 +141,7 @@ impl Optimizer for Horn {
 
         let lambda = self.lambda;
         for _ in 0..self.repeat {
-            let ii = (m as f64 * rng.gen_range(0., 1.)) as isize;
+            let ii = (m as f32 * rng.gen_range(0., 1.)) as isize;
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
             let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
@@ -193,7 +181,7 @@ impl Optimizer for Horn {
 
         let u = vecs.column(idx);
         let q = pinv_b.dot(&p).dot(&u);
-        let mut max_coeff: f64 = 0.0;
+        let mut max_coeff: Float = 0.0;
         for v in q.iter() {
             max_coeff = max_coeff.max(v.abs());
         }
@@ -204,8 +192,8 @@ impl Optimizer for Horn {
                 (_, false) => q[j].abs().min(1.0),
             };
             let phase = q[j].arg() + PI;
-            wave_source[j].amp = amp as f32;
-            wave_source[j].phase = phase as f32;
+            wave_source[j].amp = amp;
+            wave_source[j].phase = phase;
         }
     }
 }

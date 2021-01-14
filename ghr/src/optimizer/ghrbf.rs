@@ -11,23 +11,21 @@
  *
  */
 
-use crate::buffer::{ComplexFieldBufferScatter, FieldBuffer};
-use crate::optimizer::Optimizer;
-use crate::vec_utils::*;
-use crate::wave_source::WaveSource;
-use crate::Vector3;
-use std::f32::consts::PI;
+use crate::{
+    buffer::{ComplexFieldBufferScatter, FieldBuffer},
+    optimizer::Optimizer,
+    vec_utils::*,
+    wave_source::WaveSource,
+    Complex, Float, Vector3, PI,
+};
 
-use ndarray_linalg::*;
-
-type Complex = c32;
 const PHASE_DIV: usize = 16;
 const AMP_DIV: usize = 16;
 
 fn transfer(
     buffer: &ComplexFieldBufferScatter,
     source: &WaveSource,
-    wave_num: f32,
+    wave_num: Float,
 ) -> Vec<Complex> {
     buffer
         .observe_points()
@@ -35,7 +33,7 @@ fn transfer(
             let diff = sub(observe_point, source.pos);
             let dist = norm(diff);
             let r = source.amp / dist;
-            let phi = source.phase - wave_num * dist;
+            let phi = source.phase + wave_num * dist;
             Complex::from_polar(&r, &phi)
         })
         .collect()
@@ -43,17 +41,17 @@ fn transfer(
 
 pub struct GreedyBruteForce {
     foci: Vec<Vector3>,
-    amps: Vec<f32>,
+    amps: Vec<Float>,
     phase_division: usize,
     amp_division: usize,
-    wave_length: f64,
+    wave_length: Float,
 }
 
 impl GreedyBruteForce {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<f64>, wave_length: f64) -> Self {
+    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
         Self {
             foci,
-            amps: amps.iter().map(|&x| x as f32).collect(),
+            amps,
             wave_length,
             phase_division: PHASE_DIV,
             amp_division: AMP_DIV,
@@ -65,11 +63,11 @@ impl GreedyBruteForce {
         for target_point in self.foci.iter() {
             scatter.add_observe_point(*target_point, Complex::new(0., 0.));
         }
-        let wave_num = 2.0 * PI / self.wave_length as f32;
+        let wave_num = 2.0 * PI / self.wave_length;
         let mut cache = vec![Complex::new(0., 0.); self.foci.len()];
         let mut good_field = vec![Complex::new(0., 0.); self.foci.len()];
         let phases: Vec<_> = (0..self.phase_division)
-            .map(|k| 2.0 * PI * k as f32 / self.phase_division as f32)
+            .map(|k| 2.0 * PI * k as Float / self.phase_division as Float)
             .collect();
         for wave_source in wave_sources {
             wave_source.amp = 1.0;
@@ -104,14 +102,14 @@ impl GreedyBruteForce {
         for target_point in self.foci.iter() {
             scatter.add_observe_point(*target_point, Complex::new(0., 0.));
         }
-        let wave_num = 2.0 * PI / self.wave_length as f32;
+        let wave_num = 2.0 * PI / self.wave_length;
         let mut cache = vec![Complex::new(0., 0.); self.foci.len()];
         let mut good_field = vec![Complex::new(0., 0.); self.foci.len()];
         let phases: Vec<_> = (0..self.phase_division)
-            .map(|k| 2.0 * PI * k as f32 / self.phase_division as f32)
+            .map(|k| 2.0 * PI * k as Float / self.phase_division as Float)
             .collect();
         let amps: Vec<_> = (1..=self.amp_division)
-            .map(|k| k as f32 / self.amp_division as f32)
+            .map(|k| k as Float / self.amp_division as Float)
             .collect();
         for wave_source in wave_sources {
             let mut min_phase = 0.0;
