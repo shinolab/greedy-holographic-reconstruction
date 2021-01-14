@@ -157,6 +157,8 @@ impl Optimizer for LM {
         let foci = &self.foci;
         let amps = &self.amps;
 
+        let wave_num = 2.0 * PI / self.wave_length;
+
         let include_amp = false;
 
         let m = foci.len();
@@ -177,7 +179,7 @@ impl Optimizer for LM {
         };
         let I: ArrayBase<OwnedRepr<Float>, _> = Array::eye(n_param);
 
-        let BhB = Self::make_BhB(amps, foci, wave_source, n, m, include_amp, self.wave_length);
+        let BhB = Self::make_BhB(amps, foci, wave_source, n, m, include_amp, wave_num);
 
         let mut x = x0;
         let mut nu = 0.0;

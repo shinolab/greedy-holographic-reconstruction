@@ -13,12 +13,14 @@
 
 pub mod ghrbf;
 mod gradient_descent;
+mod gs_pat;
 mod horn;
 mod levenberg_marquardt;
 mod long;
 
 pub use ghrbf::*;
 pub use gradient_descent::GD;
+pub use gs_pat::GSPAT;
 pub use horn::Horn;
 pub use levenberg_marquardt::LM;
 pub use long::Long;

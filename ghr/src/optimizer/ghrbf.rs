@@ -14,7 +14,7 @@
 use crate::{
     buffer::{ComplexFieldBufferScatter, FieldBuffer},
     optimizer::Optimizer,
-    utils::transfer,
+    vec_utils::*,
     wave_source::WaveSource,
     Complex, Float, Vector3, PI,
 };
@@ -22,14 +22,20 @@ use crate::{
 const PHASE_DIV: usize = 16;
 const AMP_DIV: usize = 16;
 
-fn transfer_field(
+fn transfer(
     buffer: &ComplexFieldBufferScatter,
     source: &WaveSource,
     wave_num: Float,
 ) -> Vec<Complex> {
     buffer
         .observe_points()
-        .map(|observe_point| transfer(source.pos, observe_point, wave_num))
+        .map(|observe_point| {
+            let diff = sub(observe_point, source.pos);
+            let dist = norm(diff);
+            let r = source.amp / dist;
+            let phi = source.phase + wave_num * dist;
+            Complex::from_polar(&r, &phi)
+        })
         .collect()
 }
 
@@ -69,7 +75,7 @@ impl GreedyBruteForce {
             let mut min_v = f32::INFINITY;
             for &phase in &phases {
                 wave_source.phase = phase;
-                let field = transfer_field(&scatter, &wave_source, wave_num);
+                let field = transfer(&scatter, &wave_source, wave_num);
                 let v: f32 = field
                     .iter()
                     .zip(cache.iter())
@@ -112,7 +118,7 @@ impl GreedyBruteForce {
             for (&phase, &amp) in iproduct!(&phases, &amps) {
                 wave_source.amp = amp;
                 wave_source.phase = phase;
-                let field = transfer_field(&scatter, &wave_source, wave_num);
+                let field = transfer(&scatter, &wave_source, wave_num);
                 let v: f32 = field
                     .iter()
                     .zip(cache.iter())

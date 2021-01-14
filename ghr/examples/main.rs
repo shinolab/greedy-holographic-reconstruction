@@ -16,11 +16,11 @@ use ghr::calculator::{Calculate, Calculator, CpuCalculator};
 use ghr::optimizer::*;
 use ghr::vec_utils::*;
 use ghr::wave_source::WaveSource;
+use ghr::PI;
 
 use image::png::PNGEncoder;
 use image::ColorType;
 
-use std::f32::consts::PI;
 use std::fs::File;
 
 const NUM_SOURCE_X: usize = 18;
@@ -57,7 +57,6 @@ fn main() {
     let obs_range = 100.0;
 
     let mut calculator = CpuCalculator::new();
-    // calculator.set_accurate_mode(true);
     calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
     let mut transducers = Vec::new();
@@ -97,33 +96,33 @@ fn main() {
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
 
-    let optimizer = GreedyBruteForce::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    let optimizer = GreedyBruteForce::new(target_pos.clone(), amps.clone(), WAVE_LENGTH);
     optimizer.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     println!("GBS: {}", buffer.max());
     write_image!("xy_ghr_p.png", buffer, bb);
 
-    let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    let horn = Horn::new(target_pos.clone(), amps.clone(), WAVE_LENGTH);
     horn.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     println!("HORN: {}", buffer.max());
     write_image!("xy_horn.png", buffer, bb);
 
-    let long = Long::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    let long = Long::new(target_pos.clone(), amps.clone(), WAVE_LENGTH);
     long.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     println!("LONG: {}", buffer.max());
     write_image!("xy_long.png", buffer, bb);
 
-    let lm = LM::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
+    let lm = LM::new(target_pos.clone(), amps.clone(), WAVE_LENGTH);
     lm.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
     println!("LM: {}", buffer.max());
     write_image!("xy_lm.png", buffer, bb);
 
-    let gd = GD::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-    gd.optimize(calculator.wave_sources(), true, true);
+    let gspat = GSPAT::new(target_pos.clone(), amps.clone(), WAVE_LENGTH);
+    gspat.optimize(calculator.wave_sources(), true, true);
     buffer.calculate(&calculator);
-    println!("GD: {}", buffer.max());
-    write_image!("xy_gd.png", buffer, bb);
+    println!("LM: {}", buffer.max());
+    write_image!("xy_gspat.png", buffer, bb);
 }
