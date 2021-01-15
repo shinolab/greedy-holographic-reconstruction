@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 26/07/2020
+Last Modified: 15/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -229,7 +229,7 @@ class Optimizer():
         nativemethods.GHR_DLL.GHR_LM(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))
 
     @staticmethod
-    def gradient_descent(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
+    def gspat(calculate: Calculator, foci, amps, wave_len, include_amp, normalize):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -239,4 +239,4 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_GD(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))
+        nativemethods.GHR_DLL.GHR_GSPAT(calculate.handle, foci_array, amps, c_ulong(size), c_double(wave_len), c_bool(include_amp), c_bool(normalize))

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/07/2020
+ * Last Modified: 15/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -22,9 +22,9 @@ use ghr::Vector3;
 pub unsafe extern "C" fn GHR_GreedyBruteForce(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f64,
+    amps: *const f32,
     size: u64,
-    wave_len: f64,
+    wave_len: f32,
     include_amp: bool,
     normalize: bool,
 ) {
@@ -43,9 +43,9 @@ pub unsafe extern "C" fn GHR_GreedyBruteForce(
 pub unsafe extern "C" fn GHR_Horn(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f64,
+    amps: *const f32,
     size: u64,
-    wave_len: f64,
+    wave_len: f32,
     include_amp: bool,
     normalize: bool,
 ) {
@@ -62,9 +62,9 @@ pub unsafe extern "C" fn GHR_Horn(
 pub unsafe extern "C" fn GHR_Long(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f64,
+    amps: *const f32,
     size: u64,
-    wave_len: f64,
+    wave_len: f32,
     include_amp: bool,
     normalize: bool,
 ) {
@@ -81,9 +81,9 @@ pub unsafe extern "C" fn GHR_Long(
 pub unsafe extern "C" fn GHR_LM(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f64,
+    amps: *const f32,
     size: u64,
-    wave_len: f64,
+    wave_len: f32,
     include_amp: bool,
     normalize: bool,
 ) {
@@ -97,12 +97,12 @@ pub unsafe extern "C" fn GHR_LM(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_GD(
+pub unsafe extern "C" fn GHR_GSPAT(
     handle: *mut c_void,
     foci: *const c_void,
-    amps: *const f64,
+    amps: *const f32,
     size: u64,
-    wave_len: f64,
+    wave_len: f32,
     include_amp: bool,
     normalize: bool,
 ) {
@@ -110,7 +110,7 @@ pub unsafe extern "C" fn GHR_GD(
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let gd = GD::new(foci.to_vec(), amps.to_vec(), wave_len);
+    let gd = GSPAT::new(foci.to_vec(), amps.to_vec(), wave_len);
     gd.optimize((*calc).wave_sources(), include_amp, normalize);
     forget(calc);
 }

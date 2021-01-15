@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 16/08/2020
+Last Modified: 15/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -215,20 +215,20 @@ if __name__ == '__main__':
     p1 = calc_p1()
     print('p1: ' + str(p1))
 
-    # # SMILE
-    # radius = 45.0
-    # num = 30
-    # target_pos = []
-    # for i in range(num):
-    #     theta = 2 * math.pi * i / num
-    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
-    # target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
-    # for i in range(1, num // 4):
-    #     theta = -math.pi * i / (num // 4)
-    #     target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # amps = 1.0 * np.ones(len(target_pos))
-    # print( p1 / math.sqrt(len(target_pos)))
+    # SMILE
+    radius = 45.0
+    num = 30
+    target_pos = []
+    for i in range(num):
+        theta = 2 * math.pi * i / num
+        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    target_pos.append(center + np.array([radius * 0.3, radius * 0.3, 0]))
+    target_pos.append(center + np.array([-radius * 0.3, radius * 0.3, 0]))
+    for i in range(1, num // 4):
+        theta = -math.pi * i / (num // 4)
+        target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    amps = 1.0 * np.ones(len(target_pos))
+    print( p1 / math.sqrt(len(target_pos)))
 
     # target_pos = []
     # target_pos.append(center + np.array([-20.0, 0.0, 0]))
@@ -243,37 +243,47 @@ if __name__ == '__main__':
     # target_pos.append(center)
     # amps = np.array([10.0])
 
+    ## 
+    # radius = 40.0
+    # num = 5
+    # target_pos = []
+    # for i in range(num):
+    #     theta = 2 * math.pi * i / num
+    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
+    # amps = p1/math.sqrt(len(target_pos)) * np.ones(len(target_pos))
 
-    radius = 40.0
-    num = 5
-    target_pos = []
-    for i in range(num):
-        theta = 2 * math.pi * i / num
-        target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    amps = p1/math.sqrt(len(target_pos)) * np.ones(len(target_pos))
     setup_pyplot()
+    ext = 'png'
     # plot_target_xy(target_pos, amps, ext = 'pdf')
 
-    # optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    # plot_phase_xy(wave_sources, 'gbs', ext='pdf')
+    # ######### GHR-BF #####################
+    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'gbs', ext=ext)
 
-    # ######### HORN #####################
+    ######### HORN #####################
+    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'horn', ext=ext)
+
     optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    plot_phase_xy(wave_sources, 'horn_non_amp_opt', ext='png')
+    plot_phase_xy(wave_sources, 'horn_non_amp_opt', ext=ext)
 
-    # # ######## Long #####################
-    # optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    # plot_phase_xy(wave_sources, 'long', ext='pdf')
+    # ######## Long #####################
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'long', ext=ext)
 
-    # # ####### Levenberg Marquardt #####################
-    # Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    # plot_phase_xy(wave_sources, 'lm', ext='pdf')
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    plot_phase_xy(wave_sources, 'long_non_amp_opt', ext=ext)
 
-    # Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    # plot_phase_xy(wave_sources, 'lm_amp', ext='png')
-    # # ####### Levenberg Marquardt #####################
-    # Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    # plot_phase_xy(wave_sources, 'gd', ext='png')
+    # ####### Levenberg Marquardt #####################
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    plot_phase_xy(wave_sources, 'lm', ext=ext)
 
-    # Optimizer.gradient_descent(calculator, target_pos, amps, WAVE_LENGTH, True, True)
-    # plot_phase_xy(wave_sources, 'gd_amp', ext='png')
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'lm_amp', ext=ext)
+
+    # ####### GS-PAT #####################
+    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    plot_phase_xy(wave_sources, 'gspat', ext=ext)
+
+    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    plot_phase_xy(wave_sources, 'gspat_amp', ext=ext)

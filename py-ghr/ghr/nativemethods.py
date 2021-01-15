@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 26/07/2020
+Last Modified: 15/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -139,5 +139,5 @@ def __init_optimizer():
     GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_LM.restypes = [None]
 
-    GHR_DLL.GHR_GD.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
-    GHR_DLL.GHR_GD.restypes = [None]
+    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_GSPAT.restypes = [None]
