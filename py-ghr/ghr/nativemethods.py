@@ -127,17 +127,17 @@ def __init_buffer():
 
 
 def __init_optimizer():
-    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
     GHR_DLL.GHR_GreedyBruteForce.restypes = [None]
 
-    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
     GHR_DLL.GHR_Horn.restypes = [None]
 
-    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
     GHR_DLL.GHR_Long.restypes = [None]
 
-    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
     GHR_DLL.GHR_LM.restypes = [None]
 
-    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_float), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
+    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
     GHR_DLL.GHR_GSPAT.restypes = [None]

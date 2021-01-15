@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 13/07/2020
+ * Last Modified: 15/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -106,7 +106,19 @@ impl Optimizer for Long {
         let gt = Self::adjoint(&G);
         let gtg = gt.dot(&G);
         let gtf = gt.dot(&f);
-        let q = gtg.solve(&gtf).unwrap();
+        let mut q = gtg.solve(&gtf).unwrap();
+
+        // Correction provided in GS-PAT
+        let zc = A.dot(&q);
+        let ratio: Float = zc
+            .iter()
+            .zip(amps.iter())
+            .map(|(az, &a0)| az.abs() / a0)
+            .sum();
+        let avg_err = m as Float / ratio;
+        for i in 0..n {
+            q[i] = q[i] / avg_err;
+        }
 
         let mut max_coeff: Float = 0.0;
         for v in q.iter() {

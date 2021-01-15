@@ -63,7 +63,7 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
         .y_range(Y_RANGE)\
         .z_at(Z)\
         .resolution(RESOLUTION)\
-        .generate(FieldType.Pressure)
+        .generate(FieldType.Power)
     buffer.calculate(calculator)
 
     # plot

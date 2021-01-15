@@ -37,14 +37,12 @@ impl GSPAT {
 
 impl Optimizer for GSPAT {
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], _include_amp: bool, normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
 
         let wave_num = 2.0 * PI / self.wave_length;
-
-        let include_amp = true;
 
         let m = foci.len();
         let n = num_trans;

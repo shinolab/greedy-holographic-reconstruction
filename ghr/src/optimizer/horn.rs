@@ -124,7 +124,13 @@ impl Optimizer for Horn {
             }
         }
 
-        let (u, s, vt) = b.svd(true, true).unwrap();
+        let (u, s, vt) = match b.svd(true, true) {
+            Ok(r) => r,
+            Err(err) => {
+                println!("{}", err);
+                panic!("err");
+            }
+        };
         let mut singular_values_inv_mat = Array::zeros((n, m));
         for i in 0..m.min(n) {
             let r = s[i] / (s[i] * s[i] + alpha * alpha);

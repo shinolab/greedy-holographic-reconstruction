@@ -4,25 +4,26 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/07/2020
+ * Last Modified: 15/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use crate::{
-    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
-};
+use crate::{optimizer::Optimizer, vec_utils::*, wave_source::WaveSource, Vector3};
 
 use ndarray::*;
 use ndarray_linalg::*;
-use rand::Rng;
 
 const EPS_1: Float = 1e-8;
 const EPS_2: Float = 1e-8;
 const TAU: Float = 1e-3;
 const K_MAX: usize = 200;
+
+type Float = f64;
+type Complex = c64;
+const PI: Float = std::f64::consts::PI;
 
 pub struct LM {
     foci: Vec<Vector3>,
@@ -31,13 +32,19 @@ pub struct LM {
 }
 
 impl LM {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
+    pub fn new(foci: Vec<Vector3>, amps: Vec<f32>, wave_length: f32) -> Self {
         Self {
             foci,
-            amps,
-            wave_length,
+            amps: amps.iter().map(|&x| x as _).collect(),
+            wave_length: wave_length as _,
         }
     }
+}
+
+fn transfer(trans_pos: Vector3, target_pos: Vector3, wave_num: Float) -> Complex {
+    let diff = sub(target_pos, trans_pos);
+    let dist = norm(diff) as Float;
+    1.0 / dist * (Complex::new(0., wave_num * dist)).exp()
 }
 
 impl LM {
@@ -167,10 +174,12 @@ impl Optimizer for LM {
         let n_param = if include_amp { 2 * n + m } else { n + m };
 
         let mut x0: ArrayBase<OwnedRepr<Float>, _> = Array::zeros(n_param);
-        let mut rng = rand::thread_rng();
-        for i in 0..(n + m) {
-            x0[i] = rng.gen::<Float>() * 2.0 * PI;
-        }
+
+        // use rand::Rng;
+        // let mut rng = rand::thread_rng();
+        // for i in 0..(n + m) {
+        //     x0[i] = rng.gen::<Float>() * 2.0 * PI;
+        // }
 
         if include_amp {
             for i in 0..n {
@@ -182,7 +191,7 @@ impl Optimizer for LM {
         let BhB = Self::make_BhB(amps, foci, wave_source, n, m, include_amp, wave_num);
 
         let mut x = x0;
-        let mut nu = 0.0;
+        let mut nu = 2.0;
 
         let T = Self::make_T(&x, n, m, include_amp);
         let (mut A, mut g) = Self::calc_JtJ_Jtf(&BhB, &T, n + m);
@@ -217,7 +226,7 @@ impl Optimizer for LM {
                     A = A_new;
                     g = g_new;
                     found = g.norm_max() <= EPS_1;
-                    mu *= (1f32 / 3.).max(1. - (2. * rho - 1.).pow(3.));
+                    mu *= (1f64 / 3.).max(1. - (2. * rho - 1.).pow(3.));
                     nu = 2.0;
                 } else {
                     mu *= nu;
