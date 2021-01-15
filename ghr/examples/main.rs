@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/07/2020
+ * Last Modified: 15/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -18,7 +18,7 @@ use ghr::vec_utils::*;
 use ghr::wave_source::WaveSource;
 use ghr::PI;
 
-use image::png::PNGEncoder;
+use image::png::PngEncoder;
 use image::ColorType;
 
 use std::fs::File;
@@ -40,7 +40,7 @@ macro_rules! write_image {
             .map(|v| ((v / max) * 255.) as u8)
             .collect();
 
-        let encoder = PNGEncoder::new(output);
+        let encoder = PngEncoder::new(output);
         encoder
             .encode(&pixels, $bb.0 as u32, $bb.1 as u32, ColorType::L8)
             .unwrap();

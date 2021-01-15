@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 14/07/2020
+ * Last Modified: 15/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -141,7 +141,7 @@ impl Optimizer for Horn {
 
         let lambda = self.lambda;
         for _ in 0..self.repeat {
-            let ii = (m as f32 * rng.gen_range(0., 1.)) as isize;
+            let ii = (m as f32 * rng.gen_range(0.0..1.0)) as isize;
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
             let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
