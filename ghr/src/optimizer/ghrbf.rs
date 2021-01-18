@@ -14,15 +14,12 @@
 use crate::{
     buffer::{ComplexFieldBufferScatter, FieldBuffer},
     optimizer::Optimizer,
-    vec_utils::*,
+    utils::transfer,
     wave_source::WaveSource,
     Complex, Float, Vector3, PI,
 };
 
-const PHASE_DIV: usize = 16;
-const AMP_DIV: usize = 16;
-
-fn transfer(
+fn transfer_buffer(
     buffer: &ComplexFieldBufferScatter,
     source: &WaveSource,
     wave_num: Float,
@@ -30,11 +27,13 @@ fn transfer(
     buffer
         .observe_points()
         .map(|observe_point| {
-            let diff = sub(observe_point, source.pos);
-            let dist = norm(diff);
-            let r = source.amp / dist;
-            let phi = source.phase + wave_num * dist;
-            Complex::from_polar(&r, &phi)
+            transfer(
+                source.pos,
+                observe_point,
+                source.amp,
+                source.phase,
+                wave_num,
+            )
         })
         .collect()
 }
@@ -45,16 +44,18 @@ pub struct GreedyBruteForce {
     phase_division: usize,
     amp_division: usize,
     wave_length: Float,
+    include_amp: bool,
 }
 
 impl GreedyBruteForce {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
+    pub fn new(phase_division: usize, amp_division: usize, wave_length: Float) -> Self {
         Self {
-            foci,
-            amps,
+            foci: vec![],
+            amps: vec![],
             wave_length,
-            phase_division: PHASE_DIV,
-            amp_division: AMP_DIV,
+            phase_division,
+            amp_division,
+            include_amp: amp_division != 1,
         }
     }
 
@@ -75,7 +76,7 @@ impl GreedyBruteForce {
             let mut min_v = Float::INFINITY;
             for &phase in &phases {
                 wave_source.phase = phase;
-                let field = transfer(&scatter, &wave_source, wave_num);
+                let field = transfer_buffer(&scatter, &wave_source, wave_num);
                 let v: Float = field
                     .iter()
                     .zip(cache.iter())
@@ -118,7 +119,7 @@ impl GreedyBruteForce {
             for (&phase, &amp) in iproduct!(&phases, &amps) {
                 wave_source.amp = amp;
                 wave_source.phase = phase;
-                let field = transfer(&scatter, &wave_source, wave_num);
+                let field = transfer_buffer(&scatter, &wave_source, wave_num);
                 let v: Float = field
                     .iter()
                     .zip(cache.iter())
@@ -143,11 +144,19 @@ impl GreedyBruteForce {
 }
 
 impl Optimizer for GreedyBruteForce {
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
-        if include_amp {
+    fn optimize(&self, wave_source: &mut [WaveSource]) {
+        if self.include_amp {
             self.optimize_amp_phase(wave_source)
         } else {
             self.optimize_phase(wave_source)
         }
+    }
+
+    fn set_target_foci(&mut self, foci: &[Vector3]) {
+        self.foci = foci.to_vec();
+    }
+
+    fn set_target_amps(&mut self, amps: &[Float]) {
+        self.amps = amps.to_vec();
     }
 }

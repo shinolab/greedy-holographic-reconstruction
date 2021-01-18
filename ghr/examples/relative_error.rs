@@ -4,240 +4,197 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::buffer::{generator::*, BufferBuilder, ComplexFieldBufferScatter, FieldBuffer};
-use ghr::calculator::{Calculate, Calculator, CpuCalculator};
-use ghr::optimizer::*;
-use ghr::vec_utils::*;
-use ghr::wave_source::WaveSource;
+use ghr::{
+    buffer::{generator::*, BufferBuilder, ComplexFieldBufferScatter, FieldBuffer},
+    calculator::{Calculate, Calculator, CpuCalculator},
+    optimizer::*,
+    vec_utils::*,
+    wave_source::WaveSource,
+    Complex, Float, Vector3, PI,
+};
 
 use ndarray_linalg::*;
 use rand::prelude::*;
 
-type Complex = c32;
-
-use std::f32::consts::PI;
-const SOURCE_SIZE: f32 = 10.0;
-const WAVE_LENGTH: f32 = 8.5;
+const SOURCE_SIZE: Float = 10.0;
+const WAVE_LENGTH: Float = 8.5;
 
 const N_SQRT: usize = 20;
 
-macro_rules! calc_p1 {
-    ($f: ident) => {{
-        let mut calculator = CpuCalculator::new();
-        calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
+fn calc_p1(focus: Vector3) -> Float {
+    let mut calculator = CpuCalculator::new();
+    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
-        let mut transducers = Vec::new();
-        for y in 0..N_SQRT {
-            for x in 0..N_SQRT {
-                let pos = [SOURCE_SIZE * x as f32, SOURCE_SIZE * y as f32, 0.];
-                let phase = (norm(sub(pos, $f)) % WAVE_LENGTH) / WAVE_LENGTH;
-                transducers.push(WaveSource::new(pos, 1.0, 2.0 * PI * phase));
-            }
+    let mut transducers = Vec::new();
+    for y in 0..N_SQRT {
+        for x in 0..N_SQRT {
+            let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
+            let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
+            transducers.push(WaveSource::new(pos, 1.0, 2.0 * PI * phase));
         }
-        calculator.add_wave_sources(&transducers);
-        let mut buffer = BufferBuilder::new()
-            .x_at($f[0])
-            .y_at($f[1])
-            .z_at($f[2])
-            .resolution(1.)
-            .generate::<Amplitude>();
-
-        buffer.calculate(&calculator);
-        buffer.buffer()[0] as f64
-    }};
-}
-
-macro_rules! calc_relative_error {
-    ($opt: ty, $target_pos: tt, $amps: tt, $calculator: expr, $m: tt, $inc_amp: tt) => {{
-        let amp = $amps[0];
-        let mut buffer = ComplexFieldBufferScatter::new();
-        for &p in $target_pos.iter() {
-            buffer.add_observe_point(p, Complex::new(0., 0.));
-        }
-        let optimizer = <$opt>::new($target_pos.clone(), $amps.clone(), WAVE_LENGTH as f64);
-        optimizer.optimize($calculator.wave_sources(), $inc_amp, true);
-        buffer.calculate(&$calculator);
-        let demoni = amp * $m as f64;
-        let mut numerator = 0.0;
-        let mut max_v = f64::NEG_INFINITY;
-        for b in buffer.buffer() {
-            max_v = max_v.max(b.abs() as f64);
-        }
-        let mut mean_v = 0.0;
-        for b in buffer.buffer() {
-            numerator += (b.abs() as f64 - amp).abs();
-            let norm_v = b.abs() as f64 / max_v;
-            mean_v += norm_v;
-        }
-        mean_v /= buffer.buffer().len() as f64;
-
-        let mut var = 0.0;
-        for b in buffer.buffer() {
-            let norm_v = b.abs() as f64 / max_v;
-            var += (norm_v - mean_v) * (norm_v - mean_v);
-        }
-        var /= buffer.buffer().len() as f64;
-        (numerator / demoni * 100.0, var.sqrt())
-    }};
-}
-
-macro_rules! relative_error {
-    ($m: tt, $iter: tt) => {{
-        let focus_z = 150.0;
-        let center = [
-            SOURCE_SIZE * (N_SQRT - 1) as f32 / 2.0,
-            SOURCE_SIZE * (N_SQRT - 1) as f32 / 2.0,
-            focus_z,
-        ];
-        let obs_range = 100.0;
-
-        let mut calculator = CpuCalculator::new();
-        calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
-
-        let mut transducers = Vec::new();
-        for y in 0..N_SQRT {
-            for x in 0..N_SQRT {
-                let pos = [SOURCE_SIZE * x as f32, SOURCE_SIZE * y as f32, 0.];
-                transducers.push(WaveSource::new(pos, 0.0, 0.0));
-            }
-        }
-        calculator.add_wave_sources(&transducers);
-
-        let p1 = calc_p1!(center);
-
-        let mut rng = rand::thread_rng();
-        let mut gbf_es = Vec::with_capacity($iter);
-        let mut gbf1616_es = Vec::with_capacity($iter);
-        let mut horn_es = Vec::with_capacity($iter);
-        let mut long_es = Vec::with_capacity($iter);
-        let mut lm_es = Vec::with_capacity($iter);
-
-        let mut gbf_vars = Vec::with_capacity($iter);
-        let mut gbf1616_vars = Vec::with_capacity($iter);
-        let mut horn_vars = Vec::with_capacity($iter);
-        let mut long_vars = Vec::with_capacity($iter);
-        let mut lm_vars = Vec::with_capacity($iter);
-
-        for _ in 0..$iter {
-            let mut target_pos = Vec::with_capacity($m);
-            for _ in 0..$m {
-                target_pos.push(add(
-                    center,
-                    [
-                        (rng.gen::<f32>() - 0.5) * obs_range,
-                        (rng.gen::<f32>() - 0.5) * obs_range,
-                        0.0,
-                    ],
-                ));
-            }
-            let mut amps = Vec::with_capacity(target_pos.len());
-            let amp = p1 / ($m as f64).sqrt();
-            for _ in 0..target_pos.len() {
-                amps.push(amp);
-            }
-
-            let (bgf_e, bgf_var) =
-                calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m, false);
-            let (bgf1616_e, bgf1616_var) =
-                calc_relative_error!(GreedyBruteForce, target_pos, amps, calculator, $m, true);
-            let (horn_e, horn_var) =
-                calc_relative_error!(Horn, target_pos, amps, calculator, $m, true);
-            let (long_e, long_var) =
-                calc_relative_error!(Long, target_pos, amps, calculator, $m, true);
-            let (lm_e, lm_var) = calc_relative_error!(LM, target_pos, amps, calculator, $m, false);
-            gbf_es.push(bgf_e);
-            gbf1616_es.push(bgf1616_e);
-            horn_es.push(horn_e);
-            long_es.push(long_e);
-            lm_es.push(lm_e);
-
-            gbf_vars.push(bgf_var);
-            gbf1616_vars.push(bgf1616_var);
-            horn_vars.push(horn_var);
-            long_vars.push(long_var);
-            lm_vars.push(lm_var);
-        }
-        (
-            vec![gbf_es, gbf1616_es, horn_es, long_es, lm_es],
-            vec![gbf_vars, gbf1616_vars, horn_vars, long_vars, lm_vars],
-        )
-    }};
-}
-
-fn get_mean(vec: &[f64]) -> f64 {
-    let n = vec.len();
-    let mut tmp = 0.0;
-    for v in vec {
-        tmp += v;
     }
-    tmp / n as f64
+    calculator.add_wave_sources(&transducers);
+    let mut buffer = BufferBuilder::new()
+        .x_at(focus[0])
+        .y_at(focus[1])
+        .z_at(focus[2])
+        .resolution(1.)
+        .generate::<Amplitude>();
+
+    buffer.calculate(&calculator);
+    buffer.buffer()[0] as f64
 }
 
-fn get_max(vec: &[f64]) -> f64 {
-    let mut tmp = f64::NEG_INFINITY;
-    for &v in vec {
-        tmp = tmp.max(v);
+fn set_up() -> CpuCalculator {
+    let mut calculator = CpuCalculator::new();
+    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
+
+    let mut transducers = Vec::new();
+    for y in 0..N_SQRT {
+        for x in 0..N_SQRT {
+            let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
+            transducers.push(WaveSource::new(pos, 0.0, 0.0));
+        }
     }
-    tmp
+    calculator.add_wave_sources(&transducers);
+    calculator
 }
 
-fn get_min(vec: &[f64]) -> f64 {
-    let mut tmp = f64::INFINITY;
-    for &v in vec {
-        tmp = tmp.min(v);
+fn calc_relative_error<T: Optimizer>(
+    optimizer: &mut T,
+    calculator: &mut CpuCalculator,
+    foci: &[Vector3],
+    amps: &[Float],
+) -> (Float, Float) {
+    let mut buffer = ComplexFieldBufferScatter::new();
+    for &p in foci.iter() {
+        buffer.add_observe_point(p, Complex::new(0., 0.));
     }
-    tmp
+    optimizer.set_target_foci(&foci);
+    optimizer.set_target_amps(&amps);
+    optimizer.optimize(calculator.wave_sources());
+    buffer.calculate(calculator);
+
+    let mut max_v = Float::NEG_INFINITY;
+    for b in buffer.buffer() {
+        max_v = max_v.max(b.abs());
+    }
+
+    let demoni: Float = amps.iter().sum();
+    let mut numerator = 0.0;
+    let mut mean_v = 0.0;
+    for (b, amp) in buffer.buffer().iter().zip(amps.iter()) {
+        numerator += (b.abs() - amp).abs();
+        let norm_v = b.abs() / max_v;
+        mean_v += norm_v;
+    }
+    mean_v /= buffer.buffer().len() as Float;
+
+    let mut var = 0.0;
+    for b in buffer.buffer() {
+        let norm_v = b.abs() / max_v;
+        var += (norm_v - mean_v) * (norm_v - mean_v);
+    }
+    var /= buffer.buffer().len() as Float;
+    (numerator / demoni * 100.0, var.sqrt())
 }
 
-fn write_header<T: std::io::Write>(wtr: &mut csv::Writer<T>, header: &[&str]) {
-    let mut vh = Vec::with_capacity(1 + header.len() * 3);
-    vh.push("M".to_owned());
-    for &h in header {
-        vh.push(h.to_owned() + "_mean");
-        vh.push(h.to_owned() + "_max");
-        vh.push(h.to_owned() + "_min");
-    }
-    wtr.write_record(&vh).unwrap();
+fn relative_errors<T: Optimizer>(
+    optimizer: &mut T,
+    calculator: &mut CpuCalculator,
+    target_foci_set: &[Vec<Vector3>],
+    target_amps_set: &[Vec<Float>],
+) -> Vec<(Float, Float)> {
+    target_foci_set
+        .iter()
+        .zip(target_amps_set.iter())
+        .map(|(target_foci, target_amps)| {
+            calc_relative_error(optimizer, calculator, target_foci, target_amps)
+        })
+        .collect()
 }
 
-fn format_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, m: usize, vec: &Vec<Vec<f64>>) {
-    let mut vh = Vec::with_capacity(1 + vec.len() * 3);
-    vh.push(m.to_string());
-    for v in vec {
-        vh.push(get_mean(v).to_string());
-        vh.push(get_max(v).to_string());
-        vh.push(get_min(v).to_string());
+fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[(Float, Float)]) {
+    for v in data {
+        wtr.write_record(&[v.0.to_string(), v.1.to_string()])
+            .unwrap();
     }
-    wtr.write_record(&vh).unwrap();
+}
+
+fn test<T: Optimizer>(
+    opt: T,
+    name: &str,
+    calculator: &mut CpuCalculator,
+    foci_set: &[Vec<Vector3>],
+    amps_set: &[Vec<Float>],
+) {
+    let mut opt = opt;
+    let errors = relative_errors(&mut opt, calculator, &foci_set, &amps_set);
+    let mut wtr = csv::Writer::from_path(format!("relative_errors/{}.csv", name)).unwrap();
+    write_data(&mut wtr, &errors);
 }
 
 fn main() {
-    let mut wtr_error = csv::Writer::from_path("relative_error.csv").unwrap();
-    let mut wtr_var = csv::Writer::from_path("var.csv").unwrap();
-    let header = ["GBF16", "GBF1616", "HORN", "LONG", "LM"];
-    write_header(&mut wtr_error, &header);
-    write_header(&mut wtr_var, &header);
+    let iter = 10;
+    let m = 4;
 
-    use std::time::Instant;
-    for m in (1..=25).map(|i| i * 2) {
-        let start = Instant::now();
-        println!("M: {}...", m);
-        let (es_vec, vars_vec) = relative_error!(m, 1000);
-        format_data(&mut wtr_error, m, &es_vec);
-        format_data(&mut wtr_var, m, &vars_vec);
+    let focus_z = 150.0;
+    let center = [
+        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
+        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
+        focus_z,
+    ];
+    let obs_range = 100.0;
 
-        let end = start.elapsed();
-        println!(
-            "  fin: {}.{:03}",
-            end.as_secs(),
-            end.subsec_nanos() / 1_000_000
-        );
+    let mut calculator = set_up();
+    let p1 = calc_p1(center);
+
+    let mut rng = rand::thread_rng();
+    let mut foci_set = Vec::new();
+    let mut amps_set = Vec::new();
+    for _ in 0..iter {
+        let mut foci = Vec::with_capacity(m);
+        for _ in 0..m {
+            foci.push(add(
+                center,
+                [
+                    (rng.gen::<Float>() - 0.5) * obs_range,
+                    (rng.gen::<Float>() - 0.5) * obs_range,
+                    0.0,
+                ],
+            ));
+        }
+        let mut amps = Vec::with_capacity(foci.len());
+        let amp = p1 / (m as f64).sqrt();
+        for _ in 0..foci.len() {
+            amps.push(amp);
+        }
+        foci_set.push(foci);
+        amps_set.push(amps);
     }
+
+    std::fs::create_dir("relative_errors").unwrap_or(());
+
+    test(
+        GreedyBruteForce::new(16, 1, WAVE_LENGTH),
+        "gbf_16_1",
+        &mut calculator,
+        &foci_set,
+        &amps_set,
+    );
+
+    test(
+        GSPAT::new(100, WAVE_LENGTH),
+        "gspat",
+        &mut calculator,
+        &foci_set,
+        &amps_set,
+    );
 }

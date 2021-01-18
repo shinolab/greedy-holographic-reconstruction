@@ -18,28 +18,29 @@ use crate::{
 use ndarray::*;
 use ndarray_linalg::*;
 
-const EPS_1: Float = 1e-8;
-const EPS_2: Float = 1e-8;
-const TAU: Float = 1e-3;
-const K_MAX: usize = 200;
-
 pub struct LM {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
     wave_length: Float,
+    eps_1: Float,
+    eps_2: Float,
+    tau: Float,
+    k_max: usize,
 }
 
 impl LM {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
+    pub fn new(eps_1: Float, eps_2: Float, tau: Float, k_max: usize, wave_length: Float) -> Self {
         Self {
-            foci,
-            amps: amps.iter().map(|&x| x as _).collect(),
+            foci: vec![],
+            amps: vec![],
             wave_length: wave_length as _,
+            eps_1,
+            eps_2,
+            tau,
+            k_max,
         }
     }
-}
 
-impl LM {
     fn adjoint(m: &Array2<Complex>) -> Array2<Complex> {
         m.t().mapv(|c| c.conj())
     }
@@ -63,7 +64,6 @@ impl LM {
         wave_source: &mut [WaveSource],
         n: usize,
         m: usize,
-        include_amp: bool,
         wave_num: Float,
     ) -> Array2<Complex> {
         let mut P = Array::zeros((m, m));
@@ -72,39 +72,20 @@ impl LM {
             P[[i, i]] = Complex::new(amps[i], 0.0);
             let fp = foci[i];
             for j in 0..n {
-                G[[i, j]] = transfer(wave_source[j].pos, fp, wave_num);
+                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0, wave_num);
             }
         }
-        let B = if include_amp {
-            let m = stack![Axis(1), G, -P];
-            stack![Axis(1), m, Complex::new(0.0, -1.0) * G]
-        } else {
-            stack![Axis(1), G, -P]
-        };
+        let B = stack![Axis(1), G, -P];
         Self::adjoint(&B).dot(&B)
     }
 
     #[allow(non_snake_case)]
-    fn make_T(x: &Array1<Float>, n: usize, m: usize, include_amp: bool) -> Array2<Complex> {
-        if include_amp {
-            let mut T = Array2::zeros((2 * n + m, 1));
-            for i in 0..n {
-                T[[i, 0]] = x[n + m + i] * Complex::new(0.0, -x[i]).exp();
-            }
-            for i in 0..m {
-                T[[n + i, 0]] = Complex::new(0.0, -x[n + i]).exp();
-            }
-            for i in 0..n {
-                T[[n + m + i, 0]] = Complex::new(0.0, -x[i]).exp();
-            }
-            T
-        } else {
-            let mut T = Array2::zeros((n + m, 1));
-            for i in 0..(n + m) {
-                T[[i, 0]] = Complex::new(0.0, -x[i]).exp();
-            }
-            T
+    fn make_T(x: &Array1<Float>, n: usize, m: usize) -> Array2<Complex> {
+        let mut T = Array2::zeros((n + m, 1));
+        for i in 0..(n + m) {
+            T[[i, 0]] = Complex::new(0.0, -x[i]).exp();
         }
+        T
     }
 
     #[allow(non_snake_case)]
@@ -121,37 +102,26 @@ impl LM {
     }
 
     #[allow(non_snake_case)]
-    fn calc_Fx(
-        BhB: &Array2<Complex>,
-        x: &Array1<Float>,
-        include_amp: bool,
-        n: usize,
-        m: usize,
-    ) -> Float {
+    fn calc_Fx(BhB: &Array2<Complex>, x: &Array1<Float>, n: usize, m: usize) -> Float {
         let mut t = Array2::zeros((n + m, 1));
-        if include_amp {
-            for i in 0..n {
-                t[[i, 0]] = x[n + m + i] * Complex::new(0.0, x[i]).exp();
-            }
-            for i in 0..m {
-                t[[n + i, 0]] = Complex::new(0.0, x[n + i]).exp();
-            }
-            Self::adjoint(&t)
-                .dot(&BhB.slice(s![..(n + m), ..(n + m)]))
-                .dot(&t)[[0, 0]]
-            .re
-        } else {
-            for i in 0..(n + m) {
-                t[[i, 0]] = Complex::new(0.0, x[i]).exp();
-            }
-            Self::adjoint(&t).dot(BhB).dot(&t)[[0, 0]].re
+        for i in 0..(n + m) {
+            t[[i, 0]] = Complex::new(0.0, x[i]).exp();
         }
+        Self::adjoint(&t).dot(BhB).dot(&t)[[0, 0]].re
     }
 }
 
 impl Optimizer for LM {
+    fn set_target_foci(&mut self, foci: &[Vector3]) {
+        self.foci = foci.to_vec();
+    }
+
+    fn set_target_amps(&mut self, amps: &[Float]) {
+        self.amps = amps.to_vec();
+    }
+
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource]) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
@@ -161,7 +131,7 @@ impl Optimizer for LM {
         let m = foci.len();
         let n = num_trans;
 
-        let n_param = if include_amp { 2 * n + m } else { n + m };
+        let n_param = n + m;
 
         let mut x0: ArrayBase<OwnedRepr<Float>, _> = Array::zeros(n_param);
 
@@ -171,19 +141,14 @@ impl Optimizer for LM {
             x0[i] = rng.gen::<Float>() * 2.0 * PI;
         }
 
-        if include_amp {
-            for i in 0..n {
-                x0[n + m + i] = 1.0;
-            }
-        };
         let I: ArrayBase<OwnedRepr<Float>, _> = Array::eye(n_param);
 
-        let BhB = Self::make_BhB(amps, foci, wave_source, n, m, include_amp, wave_num);
+        let BhB = Self::make_BhB(amps, foci, wave_source, n, m, wave_num);
 
         let mut x = x0;
         let mut nu = 2.0;
 
-        let T = Self::make_T(&x, n, m, include_amp);
+        let T = Self::make_T(&x, n, m);
         let (mut A, mut g) = Self::calc_JtJ_Jtf(&BhB, &T, n + m);
         let A_max: Float = {
             let mut tmp = Float::NEG_INFINITY;
@@ -192,30 +157,30 @@ impl Optimizer for LM {
             }
             tmp
         };
-        let mut mu = TAU * A_max;
-        let mut found = g.norm_max() <= EPS_1;
-        let mut Fx = Self::calc_Fx(&BhB, &x, include_amp, n, m);
-        for _ in 0..K_MAX {
+        let mut mu = self.tau * A_max;
+        let mut found = g.norm_max() <= self.eps_1;
+        let mut Fx = Self::calc_Fx(&BhB, &x, n, m);
+        for _ in 0..self.k_max {
             if found {
                 break;
             }
 
             let h_lm = -(&A + &(mu * &I)).solve(&g).unwrap();
-            if h_lm.norm() <= EPS_2 * (x.norm() + EPS_2) {
+            if h_lm.norm() <= self.eps_2 * (x.norm() + self.eps_2) {
                 found = true;
             } else {
                 let x_new = &x + &h_lm;
-                let Fx_new = Self::calc_Fx(&BhB, &x_new, include_amp, n, m);
+                let Fx_new = Self::calc_Fx(&BhB, &x_new, n, m);
                 let L0_Lhlm = 0.5 * h_lm.t().dot(&(mu * &h_lm - &g));
                 let rho = (Fx - Fx_new) / L0_Lhlm;
                 Fx = Fx_new;
                 if rho > 0.0 {
                     x = x_new;
-                    let T = Self::make_T(&x, n, m, include_amp);
+                    let T = Self::make_T(&x, n, m);
                     let (A_new, g_new) = Self::calc_JtJ_Jtf(&BhB, &T, n + m);
                     A = A_new;
                     g = g_new;
-                    found = g.norm_max() <= EPS_1;
+                    found = g.norm_max() <= self.eps_1;
                     mu *= (1f64 / 3.).max(1. - (2. * rho - 1.).pow(3.));
                     nu = 2.0;
                 } else {
@@ -225,19 +190,8 @@ impl Optimizer for LM {
             }
         }
 
-        let mut max_coeff: Float = Float::NEG_INFINITY;
-        if include_amp {
-            for i in 0..n {
-                max_coeff = max_coeff.max(x[n + m + i].abs());
-            }
-        }
-
         for j in 0..n {
-            let amp = if include_amp {
-                x[n + m + j] / max_coeff
-            } else {
-                1.0
-            };
+            let amp = 1.0;
             let phase = (x[j] + PI) % (2.0 * PI);
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

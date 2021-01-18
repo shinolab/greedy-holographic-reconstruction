@@ -4,25 +4,27 @@
  * Created Date: 09/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 11/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::calculator::{Calculator, CpuCalculator};
-use ghr::optimizer::*;
-use ghr::vec_utils::*;
-use ghr::wave_source::WaveSource;
+use ghr::{
+    calculator::{Calculator, CpuCalculator},
+    optimizer::*,
+    vec_utils::*,
+    wave_source::WaveSource,
+    Float, PI,
+};
 
 use rand::prelude::*;
 
-use std::f32::consts::PI;
 use std::time::Instant;
 
-const SOURCE_SIZE: f32 = 10.0;
-const WAVE_LENGTH: f32 = 8.5;
+const SOURCE_SIZE: Float = 10.0;
+const WAVE_LENGTH: Float = 8.5;
 
 macro_rules! iterate {
     ($x: block, $iter: tt) => {{
@@ -38,8 +40,8 @@ macro_rules! measure {
     ($opt: ty, $m: tt, $n_sqrt: tt) => {{
         let focus_z = 150.0;
         let focal_pos = [
-            SOURCE_SIZE * ($n_sqrt - 1) as f32 / 2.0,
-            SOURCE_SIZE * ($n_sqrt - 1) as f32 / 2.0,
+            SOURCE_SIZE * ($n_sqrt - 1) as Float / 2.0,
+            SOURCE_SIZE * ($n_sqrt - 1) as Float / 2.0,
             focus_z,
         ];
         let obs_range = 100.0;
@@ -50,7 +52,7 @@ macro_rules! measure {
         let mut transducers = Vec::new();
         for y in 0..$n_sqrt {
             for x in 0..$n_sqrt {
-                let pos = [SOURCE_SIZE * x as f32, SOURCE_SIZE * y as f32, 0.];
+                let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
                 transducers.push(WaveSource::new(pos, 0.0, 0.0));
             }
         }
@@ -68,8 +70,8 @@ macro_rules! measure {
                     target_pos.push(add(
                         focal_pos,
                         [
-                            (rng.gen::<f32>() - 0.5) * obs_range,
-                            (rng.gen::<f32>() - 0.5) * obs_range,
+                            (rng.gen::<Float>() - 0.5) * obs_range,
+                            (rng.gen::<Float>() - 0.5) * obs_range,
                             0.0,
                         ],
                     ));
@@ -79,7 +81,7 @@ macro_rules! measure {
                     amps.push(1.0);
                 }
                 let optimizer = <$opt>::new(target_pos.clone(), amps.clone(), WAVE_LENGTH as f64);
-                optimizer.optimize(calculator.wave_sources(), false, true);
+                optimizer.optimize(calculator.wave_sources(), false);
             },
             100
         );

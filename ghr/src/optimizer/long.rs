@@ -22,27 +22,35 @@ pub struct Long {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
     wave_length: Float,
+    gamma: Float,
 }
 
 impl Long {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
+    pub fn new(gamma: Float, wave_length: Float) -> Self {
         Self {
-            foci,
-            amps,
+            foci: vec![],
+            amps: vec![],
             wave_length,
+            gamma,
         }
     }
-}
 
-impl Long {
     fn adjoint(m: &Array2<Complex>) -> Array2<Complex> {
         m.t().mapv(|c| c.conj())
     }
 }
 
 impl Optimizer for Long {
+    fn set_target_foci(&mut self, foci: &[Vector3]) {
+        self.foci = foci.to_vec();
+    }
+
+    fn set_target_amps(&mut self, amps: &[Float]) {
+        self.amps = amps.to_vec();
+    }
+
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource]) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
@@ -58,7 +66,7 @@ impl Optimizer for Long {
         for i in 0..m {
             let fp = foci[i];
             for j in 0..n {
-                A[[i, j]] = transfer(wave_source[j].pos, fp, wave_num);
+                A[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0, wave_num);
             }
         }
 
@@ -94,7 +102,9 @@ impl Optimizer for Long {
             for i in 0..m {
                 sum += A[[i, j]].abs() * amps[i];
             }
-            sigma[[j, j]] = Complex::new((sum / m as Float).sqrt(), 0.0);
+            let v = (sum / m as Float).sqrt();
+            let v = Float::pow(&v, self.gamma);
+            sigma[[j, j]] = Complex::new(v, 0.0);
         }
 
         let G = stack![Axis(0), A, sigma];
@@ -125,11 +135,7 @@ impl Optimizer for Long {
             max_coeff = max_coeff.max(v.abs());
         }
         for j in 0..n {
-            let amp = if include_amp {
-                q[j].abs().min(1.0)
-            } else {
-                1.0
-            };
+            let amp = q[j].abs().min(1.0);
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

@@ -21,9 +21,6 @@ use rand::{thread_rng, Rng};
 use ndarray::*;
 use ndarray_linalg::*;
 
-const REPEAT_SDP: usize = 1000;
-const LAMBDA_SDP: Float = 0.9;
-
 pub struct Horn {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
@@ -33,26 +30,14 @@ pub struct Horn {
 }
 
 impl Horn {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
+    pub fn new(repeat: usize, lambda: Float, wave_length: Float) -> Self {
         Self {
-            foci,
-            amps: amps.iter().map(|&x| x as _).collect(),
-            wave_length: wave_length as Float,
-            repeat: REPEAT_SDP,
-            lambda: LAMBDA_SDP,
+            foci: vec![],
+            amps: vec![],
+            wave_length,
+            repeat,
+            lambda,
         }
-    }
-
-    pub fn set_wave_length(&mut self, wave_length: Float) {
-        self.wave_length = wave_length;
-    }
-
-    pub fn set_repeat(&mut self, repeat: usize) {
-        self.repeat = repeat;
-    }
-
-    pub fn set_lambda(&mut self, lambda: Float) {
-        self.lambda = lambda;
     }
 }
 
@@ -103,8 +88,16 @@ impl Horn {
     }
 }
 impl Optimizer for Horn {
+    fn set_target_foci(&mut self, foci: &[Vector3]) {
+        self.foci = foci.to_vec();
+    }
+
+    fn set_target_amps(&mut self, amps: &[Float]) {
+        self.amps = amps.to_vec();
+    }
+
     #[allow(clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource]) {
         let mut rng = thread_rng();
         let num_trans = wave_source.len();
         let foci = &self.foci;
@@ -120,7 +113,7 @@ impl Optimizer for Horn {
             p[[i, i]] = Complex::new(amps[i], 0.);
             let tp = foci[i];
             for j in 0..n {
-                b[[i, j]] = transfer(wave_source[j].pos, tp, wave_num);
+                b[[i, j]] = transfer(wave_source[j].pos, tp, 1.0, 0.0, wave_num);
             }
         }
 
@@ -141,7 +134,7 @@ impl Optimizer for Horn {
 
         let lambda = self.lambda;
         for _ in 0..self.repeat {
-            let ii = (m as Float * rng.gen_range(0.0..1.0)) as isize;
+            let ii = rng.gen_range(0..m) as isize;
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
             let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
@@ -149,7 +142,7 @@ impl Optimizer for Horn {
             let xb = xc.dot(&mmc).into_shape((l, 1)).unwrap();
             let gamma = Self::adjoint(&xb).dot(&mmc);
             let gamma = gamma[0];
-            if gamma.re > 0. {
+            if gamma.re > 0.0 {
                 let xb = xb * (-(lambda / gamma.re).sqrt());
                 x.slice_mut(s![ii, 0..ii])
                     .assign(&xb.slice(s![0..ii, 0]).mapv(|c| c.conj()));
@@ -168,7 +161,7 @@ impl Optimizer for Horn {
             }
         }
 
-        let (evs, vecs) = x.eigh(UPLO::Upper).unwrap();
+        let (evs, vecs) = x.eig().unwrap();
         let mut abs_eiv = 0.;
         let mut idx = 0;
         for j in 0..evs.len() {
@@ -181,16 +174,8 @@ impl Optimizer for Horn {
 
         let u = vecs.column(idx);
         let q = pinv_b.dot(&p).dot(&u);
-        let mut max_coeff: Float = 0.0;
-        for v in q.iter() {
-            max_coeff = max_coeff.max(v.abs());
-        }
         for j in 0..n {
-            let amp = if include_amp {
-                q[j].abs() / max_coeff
-            } else {
-                1.0
-            };
+            let amp = 1.0;
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

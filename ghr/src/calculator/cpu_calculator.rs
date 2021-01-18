@@ -51,8 +51,13 @@ macro_rules! calc_from_complex_wave {
             .map(|&observe_point| {
                 let mut $val = Complex::new(0., 0.);
                 for source in $self.sources.iter() {
-                    $val += transfer(source.pos, observe_point, wave_num)
-                        * Complex::from_polar(&source.amp, &source.phase);
+                    $val += transfer(
+                        source.pos,
+                        observe_point,
+                        source.amp,
+                        source.phase,
+                        wave_num,
+                    );
                 }
                 $exp
             })

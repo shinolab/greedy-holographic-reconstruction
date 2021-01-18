@@ -23,8 +23,10 @@ pub use horn::Horn;
 pub use levenberg_marquardt::LM;
 pub use long::Long;
 
-use crate::wave_source::WaveSource;
+use crate::{wave_source::WaveSource, Float, Vector3};
 
 pub trait Optimizer {
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool);
+    fn set_target_foci(&mut self, foci: &[Vector3]);
+    fn set_target_amps(&mut self, amps: &[Float]);
+    fn optimize(&self, wave_source: &mut [WaveSource]);
 }
