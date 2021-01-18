@@ -4,21 +4,18 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 27/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use crate::buffer::bounds::Bounds;
-use crate::buffer::dimension::Dimension;
-use crate::buffer::traits::*;
-use crate::calculator::*;
-use crate::Vector3;
-use ndarray_linalg::*;
-
-type Complex = c32;
+use crate::{
+    buffer::{bounds::Bounds, dimension::Dimension, traits::*},
+    calculator::*,
+    Complex, Vector3,
+};
 
 pub struct ComplexFieldBufferScatter {
     buffer: Vec<Complex>,

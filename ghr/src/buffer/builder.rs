@@ -4,22 +4,26 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use super::dimension::{Axis, Dimension};
-use super::generator::*;
+use crate::Float;
+
+use super::{
+    dimension::{Axis, Dimension},
+    generator::*,
+};
 
 pub struct BufferBuilder {
     dimension: Dimension,
-    x_range: (f32, f32),
-    y_range: (f32, f32),
-    z_range: (f32, f32),
-    resolution: f32,
+    x_range: (Float, Float),
+    y_range: (Float, Float),
+    z_range: (Float, Float),
+    resolution: Float,
 }
 
 impl BufferBuilder {
@@ -33,7 +37,7 @@ impl BufferBuilder {
         }
     }
 
-    pub fn x_range(mut self, x_min: f32, x_max: f32) -> Self {
+    pub fn x_range(mut self, x_min: Float, x_max: Float) -> Self {
         if self.dimension.contains(Axis::X) {
             panic!("You have already specified the range along x-axis.")
         }
@@ -42,7 +46,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn y_range(mut self, y_min: f32, y_max: f32) -> Self {
+    pub fn y_range(mut self, y_min: Float, y_max: Float) -> Self {
         if self.dimension.contains(Axis::Y) {
             panic!("You have already specified the range along y-axis.")
         }
@@ -51,7 +55,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn z_range(mut self, z_min: f32, z_max: f32) -> Self {
+    pub fn z_range(mut self, z_min: Float, z_max: Float) -> Self {
         if self.dimension.contains(Axis::Z) {
             panic!("You have already specified the range along z-axis.")
         }
@@ -60,7 +64,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn x_at(mut self, x: f32) -> Self {
+    pub fn x_at(mut self, x: Float) -> Self {
         if self.dimension.contains(Axis::X) {
             panic!("You have already specified the range along x-axis.")
         }
@@ -69,7 +73,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn y_at(mut self, y: f32) -> Self {
+    pub fn y_at(mut self, y: Float) -> Self {
         if self.dimension.contains(Axis::Y) {
             panic!("You have already specified the range along y-axis.")
         }
@@ -78,7 +82,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn z_at(mut self, z: f32) -> Self {
+    pub fn z_at(mut self, z: Float) -> Self {
         if self.dimension.contains(Axis::Z) {
             panic!("You have already specified the range along z-axis.")
         }
@@ -87,7 +91,7 @@ impl BufferBuilder {
         self
     }
 
-    pub fn resolution(mut self, resolution: f32) -> Self {
+    pub fn resolution(mut self, resolution: Float) -> Self {
         self.resolution = resolution;
         self
     }

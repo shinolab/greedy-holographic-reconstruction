@@ -37,7 +37,7 @@ impl GSPAT {
 
 impl Optimizer for GSPAT {
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
@@ -103,14 +103,14 @@ impl Optimizer for GSPAT {
             max_coeff = max_coeff.max(v.abs());
         }
         for j in 0..n {
-            let amp = match (include_amp, normalize) {
-                (false, _) => 1.0,
-                (_, true) => q[j].abs() / max_coeff,
-                (_, false) => q[j].abs().min(1.0),
+            let amp = if include_amp {
+                q[j].abs().min(1.0)
+            } else {
+                1.0
             };
             let phase = q[j].arg() + PI;
-            wave_source[j].amp = amp as f32;
-            wave_source[j].phase = phase as f32;
+            wave_source[j].amp = amp;
+            wave_source[j].phase = phase;
         }
     }
 }

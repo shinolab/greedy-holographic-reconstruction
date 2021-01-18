@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -18,12 +18,12 @@ use crate::{
     buffer::{AmplitudeFieldBuffer, ComplexFieldBufferScatter, FieldBuffer, IntensityFieldBuffer},
     utils::transfer,
     wave_source::WaveSource,
-    Complex, PI,
+    Complex, Float, PI,
 };
 
 pub struct CpuCalculator {
     sources: Vec<WaveSource>,
-    wave_num: f32,
+    wave_num: Float,
 }
 
 impl CpuCalculator {
@@ -76,7 +76,7 @@ impl Calculator for CpuCalculator {
     fn update_amp_phase(&mut self) {}
     fn update_source_geometry(&mut self) {}
 
-    fn set_wave_number(&mut self, wave_num: f32) {
+    fn set_wave_number(&mut self, wave_num: Float) {
         self.wave_num = wave_num;
     }
 }

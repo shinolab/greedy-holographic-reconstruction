@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 15/01/2021
+Last Modified: 18/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -253,7 +253,7 @@ if __name__ == '__main__':
     # amps = p1/math.sqrt(len(target_pos)) * np.ones(len(target_pos))
 
     setup_pyplot()
-    ext = 'png'
+    ext = 'pdf'
     # plot_target_xy(target_pos, amps, ext = 'pdf')
 
     # ######### GHR-BF #####################
@@ -261,14 +261,14 @@ if __name__ == '__main__':
     plot_phase_xy(wave_sources, 'gbs', ext=ext)
 
     ######### HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, False)
     plot_phase_xy(wave_sources, 'horn', ext=ext)
 
     optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, False, True)
     plot_phase_xy(wave_sources, 'horn_non_amp_opt', ext=ext)
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, False)
     plot_phase_xy(wave_sources, 'long', ext=ext)
 
     optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, False, True)
@@ -285,5 +285,5 @@ if __name__ == '__main__':
     Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, False, True)
     plot_phase_xy(wave_sources, 'gspat', ext=ext)
 
-    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, True, False)
     plot_phase_xy(wave_sources, 'gspat_amp', ext=ext)

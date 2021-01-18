@@ -4,16 +4,17 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use crate::buffer::traits::FieldBuffer;
-pub trait ScalarFieldBuffer: FieldBuffer<DataType = f32> {
-    fn max(&self) -> f32 {
-        self.buffer().iter().fold(f32::NAN, |m, v| v.max(m))
+use crate::{buffer::traits::FieldBuffer, Float};
+
+pub trait ScalarFieldBuffer: FieldBuffer<DataType = Float> {
+    fn max(&self) -> Float {
+        self.buffer().iter().fold(Float::NAN, |m, v| v.max(m))
     }
 }

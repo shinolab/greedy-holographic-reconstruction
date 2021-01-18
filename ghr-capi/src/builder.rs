@@ -4,23 +4,21 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::buffer::generator::*;
-use ghr::buffer::Axis;
-use ghr::buffer::BufferBuilder;
-use ghr::buffer::{AmplitudeFieldBuffer, IntensityFieldBuffer};
+use ghr::{
+    buffer::{generator::*, AmplitudeFieldBuffer, Axis, BufferBuilder, IntensityFieldBuffer},
+    Float,
+};
 
-use std::ffi::c_void;
-use std::mem::forget;
+use std::{ffi::c_void, mem::forget};
 
-use super::axis_utils::from_i32;
-use super::buffer_type::BufferType;
+use super::{axis_utils::from_i32, buffer_type::BufferType};
 
 #[no_mangle]
 pub unsafe extern "C" fn GHR_CreateBufferBuilder(out: *mut *mut BufferBuilder) {
@@ -39,7 +37,7 @@ pub unsafe extern "C" fn GHR_FreeBufferBuilder(handle: *mut BufferBuilder) {
 pub unsafe extern "C" fn GHR_BufferBuilder_At(
     handle: *mut *mut BufferBuilder,
     axis: i32,
-    pos: f32,
+    pos: Float,
 ) {
     let builder = Box::from_raw(*handle);
     let mut builder = match from_i32(axis) {
@@ -56,8 +54,8 @@ pub unsafe extern "C" fn GHR_BufferBuilder_At(
 pub unsafe extern "C" fn GHR_BufferBuilder_Range(
     handle: *mut *mut BufferBuilder,
     axis: i32,
-    min: f32,
-    max: f32,
+    min: Float,
+    max: Float,
 ) {
     let builder = Box::from_raw(*handle);
     let mut builder = match from_i32(axis) {
@@ -73,7 +71,7 @@ pub unsafe extern "C" fn GHR_BufferBuilder_Range(
 #[no_mangle]
 pub unsafe extern "C" fn GHR_BufferBuilder_Resolution(
     handle: *mut *mut BufferBuilder,
-    resolution: f32,
+    resolution: Float,
 ) {
     let builder = Box::from_raw(*handle);
     let mut builder = Box::new(builder.resolution(resolution));

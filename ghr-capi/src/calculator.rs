@@ -4,18 +4,16 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::calculator::*;
-use ghr::wave_source::WaveSource;
+use ghr::{calculator::*, wave_source::WaveSource, Float};
 
-use std::ffi::c_void;
-use std::mem::forget;
+use std::{ffi::c_void, mem::forget};
 
 #[no_mangle]
 pub unsafe extern "C" fn GHR_CreateCpuCalculator(out: *mut *mut c_void) {
@@ -59,11 +57,11 @@ pub unsafe extern "C" fn GHR_WaveSources(handle: *mut c_void, out: *mut *mut c_v
 pub unsafe extern "C" fn GHR_SetWaveSourceProps(
     handle: *mut c_void,
     i: u64,
-    x: f32,
-    y: f32,
-    z: f32,
-    amp: f32,
-    phase: f32,
+    x: Float,
+    y: Float,
+    z: Float,
+    amp: Float,
+    phase: Float,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
@@ -75,7 +73,7 @@ pub unsafe extern "C" fn GHR_SetWaveSourceProps(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveSourceAmp(handle: *mut c_void, i: u64, amp: f32) {
+pub unsafe extern "C" fn GHR_SetWaveSourceAmp(handle: *mut c_void, i: u64, amp: Float) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
     sources[i as usize].amp = amp;
@@ -83,7 +81,7 @@ pub unsafe extern "C" fn GHR_SetWaveSourceAmp(handle: *mut c_void, i: u64, amp: 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveSourcePhase(handle: *mut c_void, i: u64, phase: f32) {
+pub unsafe extern "C" fn GHR_SetWaveSourcePhase(handle: *mut c_void, i: u64, phase: Float) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
     sources[i as usize].phase = phase;
@@ -105,7 +103,7 @@ pub unsafe extern "C" fn GHR_UpdateSourceGeometry(handle: *mut c_void) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveNum(handle: *mut c_void, wave_num: f32) {
+pub unsafe extern "C" fn GHR_SetWaveNum(handle: *mut c_void, wave_num: Float) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     (*calc).set_wave_number(wave_num);
     forget(calc);

@@ -21,4 +21,4 @@ csv = "1.1"
 
 [features]
 double = []
-default = []
+default = ["double"]

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 15/01/2021
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -26,5 +26,5 @@ pub use long::Long;
 use crate::wave_source::WaveSource;
 
 pub trait Optimizer {
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool);
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool);
 }

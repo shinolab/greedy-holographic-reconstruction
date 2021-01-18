@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -12,21 +12,25 @@
  */
 
 use super::traits::ScalarFieldBuffer;
-use crate::buffer::bounds::Bounds;
-use crate::buffer::dimension::{Axis, Dimension};
-use crate::buffer::traits::*;
-use crate::Vector3;
+use crate::{
+    buffer::{
+        bounds::Bounds,
+        dimension::{Axis, Dimension},
+        traits::*,
+    },
+    Float, Vector3,
+};
 
 pub struct ScalarFieldBuffer1D {
     axis: Axis,
-    buffer: Vec<f32>,
+    buffer: Vec<Float>,
     bounds: Bounds,
     origin: Vector3,
-    resolution: f32,
+    resolution: Float,
 }
 
 impl ScalarFieldBuffer1D {
-    pub fn new(axis: Axis, bounds: Bounds, origin: Vector3, resolution: f32) -> Self {
+    pub fn new(axis: Axis, bounds: Bounds, origin: Vector3, resolution: Float) -> Self {
         let mut buffer = Vec::with_capacity(bounds.size());
         unsafe {
             buffer.set_len(bounds.size());
@@ -44,7 +48,7 @@ impl ScalarFieldBuffer1D {
 impl ScalarFieldBuffer for ScalarFieldBuffer1D {}
 
 impl FieldBuffer for ScalarFieldBuffer1D {
-    type DataType = f32;
+    type DataType = Float;
 
     fn buffer(&self) -> &[Self::DataType] {
         &self.buffer
@@ -68,13 +72,16 @@ impl FieldBuffer for ScalarFieldBuffer1D {
         let origin = self.origin;
         match self.axis {
             Axis::X => Box::new(
-                (0..len).map(move |n| [origin[0] + (n as f32 * resolution), origin[1], origin[2]]),
+                (0..len)
+                    .map(move |n| [origin[0] + (n as Float * resolution), origin[1], origin[2]]),
             ),
             Axis::Y => Box::new(
-                (0..len).map(move |n| [origin[0], origin[1] + (n as f32 * resolution), origin[2]]),
+                (0..len)
+                    .map(move |n| [origin[0], origin[1] + (n as Float * resolution), origin[2]]),
             ),
             Axis::Z => Box::new(
-                (0..len).map(move |n| [origin[0], origin[1], origin[2] + (n as f32 * resolution)]),
+                (0..len)
+                    .map(move |n| [origin[0], origin[1], origin[2] + (n as Float * resolution)]),
             ),
         }
     }

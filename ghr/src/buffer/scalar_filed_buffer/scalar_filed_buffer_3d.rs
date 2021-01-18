@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -12,21 +12,30 @@
  */
 
 use super::traits::ScalarFieldBuffer;
-use crate::buffer::bounds::Bounds;
-use crate::buffer::dimension::{Axis, Dimension};
-use crate::buffer::traits::*;
-use crate::Vector3;
+use crate::{
+    buffer::{
+        bounds::Bounds,
+        dimension::{Axis, Dimension},
+        traits::*,
+    },
+    Float, Vector3,
+};
 
 pub struct ScalarFieldBuffer3D {
     dim: (Axis, Axis, Axis),
-    buffer: Vec<f32>,
+    buffer: Vec<Float>,
     bounds: Bounds,
     origin: Vector3,
-    resolution: f32,
+    resolution: Float,
 }
 
 impl ScalarFieldBuffer3D {
-    pub fn new(dim: (Axis, Axis, Axis), bounds: Bounds, origin: Vector3, resolution: f32) -> Self {
+    pub fn new(
+        dim: (Axis, Axis, Axis),
+        bounds: Bounds,
+        origin: Vector3,
+        resolution: Float,
+    ) -> Self {
         let mut buffer = Vec::with_capacity(bounds.size());
         unsafe {
             buffer.set_len(bounds.size());
@@ -44,7 +53,7 @@ impl ScalarFieldBuffer3D {
 impl ScalarFieldBuffer for ScalarFieldBuffer3D {}
 
 impl FieldBuffer for ScalarFieldBuffer3D {
-    type DataType = f32;
+    type DataType = Float;
 
     fn buffer(&self) -> &[Self::DataType] {
         &self.buffer
@@ -78,9 +87,9 @@ impl FieldBuffer for ScalarFieldBuffer3D {
             ($first:tt, $second:tt, $third:tt, $x: ident, $y: ident, $z: ident, $r: ident, $b: ident, $o: ident) => {
                 Box::new(
                     iproduct!(
-                        (0..$b[$third]).map(move |n| $o[$third] + (n as f32 * $r)),
-                        (0..$b[$second]).map(move |n| $o[$second] + (n as f32 * $r)),
-                        (0..$b[$first]).map(move |n| $o[$first] + (n as f32 * $r))
+                        (0..$b[$third]).map(move |n| $o[$third] + (n as Float * $r)),
+                        (0..$b[$second]).map(move |n| $o[$second] + (n as Float * $r)),
+                        (0..$b[$first]).map(move |n| $o[$first] + (n as Float * $r))
                     )
                     .map(
                         move |(

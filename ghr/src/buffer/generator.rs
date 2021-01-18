@@ -4,27 +4,30 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use super::amplitude_field_buffer::AmplitudeFieldBuffer;
-use super::bounds::Bounds;
-use super::dimension::{Axis, Dimension};
-use super::intensity_field_buffer::IntensityFieldBuffer;
-use super::scalar_filed_buffer::*;
+use super::{
+    amplitude_field_buffer::AmplitudeFieldBuffer,
+    bounds::Bounds,
+    dimension::{Axis, Dimension},
+    intensity_field_buffer::IntensityFieldBuffer,
+    scalar_filed_buffer::*,
+};
+use crate::Float;
 
 pub trait Generator {
     type Output;
     fn generate(
         dimension: Dimension,
-        x_range: (f32, f32),
-        y_range: (f32, f32),
-        z_range: (f32, f32),
-        r: f32,
+        x_range: (Float, Float),
+        y_range: (Float, Float),
+        z_range: (Float, Float),
+        r: Float,
     ) -> Self::Output;
 }
 
@@ -71,10 +74,10 @@ impl Generator for Amplitude {
     type Output = Box<dyn AmplitudeFieldBuffer>;
     fn generate(
         dimension: Dimension,
-        x_range: (f32, f32),
-        y_range: (f32, f32),
-        z_range: (f32, f32),
-        r: f32,
+        x_range: (Float, Float),
+        y_range: (Float, Float),
+        z_range: (Float, Float),
+        r: Float,
     ) -> Self::Output {
         scalar_gen!(
             dimension,
@@ -93,10 +96,10 @@ impl Generator for Intensity {
     type Output = Box<dyn IntensityFieldBuffer>;
     fn generate(
         dimension: Dimension,
-        x_range: (f32, f32),
-        y_range: (f32, f32),
-        z_range: (f32, f32),
-        r: f32,
+        x_range: (Float, Float),
+        y_range: (Float, Float),
+        z_range: (Float, Float),
+        r: Float,
     ) -> Self::Output {
         scalar_gen!(
             dimension,

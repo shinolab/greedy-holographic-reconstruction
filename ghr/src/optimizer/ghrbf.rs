@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 13/07/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -72,11 +72,11 @@ impl GreedyBruteForce {
         for wave_source in wave_sources {
             wave_source.amp = 1.0;
             let mut min_phase = 0.0;
-            let mut min_v = f32::INFINITY;
+            let mut min_v = Float::INFINITY;
             for &phase in &phases {
                 wave_source.phase = phase;
                 let field = transfer(&scatter, &wave_source, wave_num);
-                let v: f32 = field
+                let v: Float = field
                     .iter()
                     .zip(cache.iter())
                     .zip(self.amps.iter())
@@ -114,12 +114,12 @@ impl GreedyBruteForce {
         for wave_source in wave_sources {
             let mut min_phase = 0.0;
             let mut min_amp = 0.0;
-            let mut min_v = f32::INFINITY;
+            let mut min_v = Float::INFINITY;
             for (&phase, &amp) in iproduct!(&phases, &amps) {
                 wave_source.amp = amp;
                 wave_source.phase = phase;
                 let field = transfer(&scatter, &wave_source, wave_num);
-                let v: f32 = field
+                let v: Float = field
                     .iter()
                     .zip(cache.iter())
                     .zip(self.amps.iter())
@@ -143,7 +143,7 @@ impl GreedyBruteForce {
 }
 
 impl Optimizer for GreedyBruteForce {
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, _normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
         if include_amp {
             self.optimize_amp_phase(wave_source)
         } else {

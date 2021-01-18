@@ -4,14 +4,16 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 15/01/2021
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use crate::{optimizer::Optimizer, vec_utils::*, wave_source::WaveSource, Vector3};
+use crate::{
+    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
+};
 
 use ndarray::*;
 use ndarray_linalg::*;
@@ -21,10 +23,6 @@ const EPS_2: Float = 1e-8;
 const TAU: Float = 1e-3;
 const K_MAX: usize = 200;
 
-type Float = f64;
-type Complex = c64;
-const PI: Float = std::f64::consts::PI;
-
 pub struct LM {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
@@ -32,19 +30,13 @@ pub struct LM {
 }
 
 impl LM {
-    pub fn new(foci: Vec<Vector3>, amps: Vec<f32>, wave_length: f32) -> Self {
+    pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
         Self {
             foci,
             amps: amps.iter().map(|&x| x as _).collect(),
             wave_length: wave_length as _,
         }
     }
-}
-
-fn transfer(trans_pos: Vector3, target_pos: Vector3, wave_num: Float) -> Complex {
-    let diff = sub(target_pos, trans_pos);
-    let dist = norm(diff) as Float;
-    1.0 / dist * (Complex::new(0., wave_num * dist)).exp()
 }
 
 impl LM {
@@ -159,14 +151,12 @@ impl LM {
 
 impl Optimizer for LM {
     #[allow(non_snake_case, clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], _include_amp: bool, normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
         let num_trans = wave_source.len();
         let foci = &self.foci;
         let amps = &self.amps;
 
         let wave_num = 2.0 * PI / self.wave_length;
-
-        let include_amp = false;
 
         let m = foci.len();
         let n = num_trans;
@@ -175,11 +165,11 @@ impl Optimizer for LM {
 
         let mut x0: ArrayBase<OwnedRepr<Float>, _> = Array::zeros(n_param);
 
-        // use rand::Rng;
-        // let mut rng = rand::thread_rng();
-        // for i in 0..(n + m) {
-        //     x0[i] = rng.gen::<Float>() * 2.0 * PI;
-        // }
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        for i in 0..(n + m) {
+            x0[i] = rng.gen::<Float>() * 2.0 * PI;
+        }
 
         if include_amp {
             for i in 0..n {
@@ -235,21 +225,22 @@ impl Optimizer for LM {
             }
         }
 
+        let mut max_coeff: Float = Float::NEG_INFINITY;
+        if include_amp {
+            for i in 0..n {
+                max_coeff = max_coeff.max(x[n + m + i].abs());
+            }
+        }
+
         for j in 0..n {
-            let amp = match (include_amp, normalize) {
-                (false, _) => 1.0,
-                (_, true) => {
-                    let mut max_coeff: Float = Float::NEG_INFINITY;
-                    for i in 0..n {
-                        max_coeff = max_coeff.max(x[n + m + i].abs());
-                    }
-                    x[n + m + j] / max_coeff
-                }
-                (_, false) => x[n + m + j].min(1.0).max(-1.0),
+            let amp = if include_amp {
+                x[n + m + j] / max_coeff
+            } else {
+                1.0
             };
             let phase = (x[j] + PI) % (2.0 * PI);
-            wave_source[j].amp = amp as f32;
-            wave_source[j].phase = phase as f32;
+            wave_source[j].amp = amp;
+            wave_source[j].phase = phase;
         }
     }
 }

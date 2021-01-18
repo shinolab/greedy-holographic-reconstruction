@@ -4,16 +4,18 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/06/2020
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::buffer::Dimension;
-use ghr::buffer::{AmplitudeFieldBuffer, IntensityFieldBuffer};
-use ghr::calculator::*;
+use ghr::{
+    buffer::{AmplitudeFieldBuffer, Dimension, IntensityFieldBuffer},
+    calculator::*,
+    Float,
+};
 
 use std::ffi::c_void;
 use std::mem::forget;
@@ -37,7 +39,7 @@ pub unsafe extern "C" fn GHR_GetScalarBufferArray(
             let buffer: Box<Box<dyn $trait>> = Box::from_raw(handle as *mut _);
             let array = buffer.buffer();
             let len = array.len();
-            let ptr = array.as_ptr() as *const f32;
+            let ptr = array.as_ptr() as *const Float;
             forget(buffer);
             *out = ptr as *const c_void;
             len as u64
@@ -50,7 +52,7 @@ pub unsafe extern "C" fn GHR_GetScalarBufferArray(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn GHR_GetScalarMax(handle: *mut c_void, buffer_type: i32) -> f32 {
+pub unsafe extern "C" fn GHR_GetScalarMax(handle: *mut c_void, buffer_type: i32) -> Float {
     macro_rules! get_max {
         ($trait: ident) => {{
             let buffer: Box<Box<dyn $trait>> = Box::from_raw(handle as *mut _);

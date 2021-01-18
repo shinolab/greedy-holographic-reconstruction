@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 15/01/2021
+Last Modified: 18/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,11 +13,11 @@ Copyright (c) 2020 Hapis Lab. All rights reserved.
 
 
 import ctypes
-from ctypes import c_void_p, c_int, POINTER, c_float, c_ulong, Structure, c_double, c_bool
+from ctypes import c_void_p, c_int, POINTER, c_ulong, Structure, c_double, c_bool
 
 
 class Vector3(Structure):
-    _fields_ = [("x", c_float), ("y", c_float), ("z", c_float)]
+    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double)]
 
     def __init__(self, position):
         super().__init__()
@@ -27,7 +27,7 @@ class Vector3(Structure):
 
 
 class WaveSource(Structure):
-    _fields_ = [("x", c_float), ("y", c_float), ("z", c_float), ("amp", c_float), ("phase", c_float)]
+    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double), ("amp", c_double), ("phase", c_double)]
 
     def __init__(self, position, amp, phase):
         super().__init__()
@@ -82,7 +82,7 @@ def __init_calculator():
     GHR_DLL.GHR_UpdateSourceGeometry.argtypes = [c_void_p]
     GHR_DLL.GHR_UpdateSourceGeometry.restypes = [None]
 
-    GHR_DLL.GHR_SetWaveNum.argtypes = [c_void_p, c_float]
+    GHR_DLL.GHR_SetWaveNum.argtypes = [c_void_p, c_double]
     GHR_DLL.GHR_SetWaveNum.restypes = [None]
 
 
@@ -93,13 +93,13 @@ def __init_builder():
     GHR_DLL.GHR_FreeBufferBuilder.argtypes = [c_void_p]
     GHR_DLL.GHR_FreeBufferBuilder.restypes = [None]
 
-    GHR_DLL.GHR_BufferBuilder_At.argtypes = [POINTER(c_void_p), c_int, c_float]
+    GHR_DLL.GHR_BufferBuilder_At.argtypes = [POINTER(c_void_p), c_int, c_double]
     GHR_DLL.GHR_BufferBuilder_At.restypes = [None]
 
-    GHR_DLL.GHR_BufferBuilder_Range.argtypes = [POINTER(c_void_p), c_int, c_float, c_float]
+    GHR_DLL.GHR_BufferBuilder_Range.argtypes = [POINTER(c_void_p), c_int, c_double, c_double]
     GHR_DLL.GHR_BufferBuilder_Range.restypes = [None]
 
-    GHR_DLL.GHR_BufferBuilder_Resolution.argtypes = [POINTER(c_void_p), c_float]
+    GHR_DLL.GHR_BufferBuilder_Resolution.argtypes = [POINTER(c_void_p), c_double]
     GHR_DLL.GHR_BufferBuilder_Resolution.restypes = [None]
 
     GHR_DLL.GHR_BufferBuilder_Generate.argtypes = [c_void_p, c_int, POINTER(c_void_p)]
@@ -114,7 +114,7 @@ def __init_buffer():
     GHR_DLL.GHR_GetScalarBufferArray.restypes = [c_ulong]
 
     GHR_DLL.GHR_GetScalarMax.argtypes = [c_void_p, c_int]
-    GHR_DLL.GHR_GetScalarMax.restypes = [c_float]
+    GHR_DLL.GHR_GetScalarMax.restypes = [c_double]
 
     GHR_DLL.GHR_GetBounds.argtypes = [c_void_p, c_int, POINTER(c_ulong), POINTER(c_ulong), POINTER(c_ulong)]
     GHR_DLL.GHR_GetBounds.restypes = [None]
@@ -127,17 +127,17 @@ def __init_buffer():
 
 
 def __init_optimizer():
-    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
+    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_GreedyBruteForce.restypes = [None]
 
-    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
+    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_Horn.restypes = [None]
 
-    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
+    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_Long.restypes = [None]
 
-    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
+    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_LM.restypes = [None]
 
-    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_float), POINTER(c_float), c_ulong, c_float, c_bool, c_bool]
+    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_bool, c_bool]
     GHR_DLL.GHR_GSPAT.restypes = [None]

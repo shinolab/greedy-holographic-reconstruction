@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 15/01/2021
+ * Last Modified: 18/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -22,7 +22,7 @@ use ndarray::*;
 use ndarray_linalg::*;
 
 const REPEAT_SDP: usize = 1000;
-const LAMBDA_SDP: Float = 0.8;
+const LAMBDA_SDP: Float = 0.9;
 
 pub struct Horn {
     foci: Vec<Vector3>,
@@ -36,8 +36,8 @@ impl Horn {
     pub fn new(foci: Vec<Vector3>, amps: Vec<Float>, wave_length: Float) -> Self {
         Self {
             foci,
-            amps,
-            wave_length,
+            amps: amps.iter().map(|&x| x as _).collect(),
+            wave_length: wave_length as Float,
             repeat: REPEAT_SDP,
             lambda: LAMBDA_SDP,
         }
@@ -104,7 +104,7 @@ impl Horn {
 }
 impl Optimizer for Horn {
     #[allow(clippy::many_single_char_names)]
-    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool, normalize: bool) {
+    fn optimize(&self, wave_source: &mut [WaveSource], include_amp: bool) {
         let mut rng = thread_rng();
         let num_trans = wave_source.len();
         let foci = &self.foci;
@@ -124,13 +124,7 @@ impl Optimizer for Horn {
             }
         }
 
-        let (u, s, vt) = match b.svd(true, true) {
-            Ok(r) => r,
-            Err(err) => {
-                println!("{}", err);
-                panic!("err");
-            }
-        };
+        let (u, s, vt) = b.svd(true, true).unwrap();
         let mut singular_values_inv_mat = Array::zeros((n, m));
         for i in 0..m.min(n) {
             let r = s[i] / (s[i] * s[i] + alpha * alpha);
@@ -147,7 +141,7 @@ impl Optimizer for Horn {
 
         let lambda = self.lambda;
         for _ in 0..self.repeat {
-            let ii = (m as f32 * rng.gen_range(0.0..1.0)) as isize;
+            let ii = (m as Float * rng.gen_range(0.0..1.0)) as isize;
             let xc = Self::remove_row(&x, ii);
             let xc = Self::remove_col(&xc, ii);
             let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
@@ -192,10 +186,10 @@ impl Optimizer for Horn {
             max_coeff = max_coeff.max(v.abs());
         }
         for j in 0..n {
-            let amp = match (include_amp, normalize) {
-                (false, _) => 1.0,
-                (_, true) => q[j].abs() / max_coeff,
-                (_, false) => q[j].abs().min(1.0),
+            let amp = if include_amp {
+                q[j].abs() / max_coeff
+            } else {
+                1.0
             };
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
