@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 18/01/2021
+Last Modified: 19/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -25,6 +25,7 @@ TRANS_SIZE = 10
 WAVE_LENGTH = 8.5
 Z = 150
 R = 100.0
+
 
 def setup_pyplot():
     plt.rcParams['text.usetex'] = True
@@ -80,8 +81,8 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
     y_labels = [-(Y_RANGE[1] - Y_RANGE[0]) / 2 + ticks_step * i for i in range(y_label_num)]
     axes.set_xticklabels(x_labels, minor=False, fontsize=12)
     axes.set_yticklabels(y_labels, minor=False, fontsize=12)
-    plt.xlabel('$x$\,[mm]')
-    plt.ylabel('$y$\,[mm]')
+    plt.xlabel(r'$x$\,[mm]')
+    plt.ylabel(r'$y$\,[mm]')
 
     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
     cax = divider.append_axes('right', '5%', pad='3%')
@@ -100,11 +101,10 @@ def plot_target_xy(target_pos, amp, ext='pdf'):
     ticks_step = 10.0
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
-    
+
     scat_x = list(map(lambda s: s[0] - TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0, target_pos))
     scat_y = list(map(lambda s: s[1] - TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0, target_pos))
-    scat = axes.scatter(scat_x, scat_y, s=400, c='black',  marker='.', vmin=0, vmax=amp.max())
-    # plot_helper.add_colorbar(fig, axes, scat)
+    axes.scatter(scat_x, scat_y, s=400, c='black', marker='.', vmin=0, vmax=amp.max())
 
     x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
     y_label_num = int(math.floor((Y_RANGE[1] - Y_RANGE[0]) / ticks_step)) + 1
@@ -117,8 +117,8 @@ def plot_target_xy(target_pos, amp, ext='pdf'):
     axes.set_xlim((-50, 50))
     axes.set_ylim((-50, 50))
 
-    plt.xlabel('$x$\,[mm]')
-    plt.ylabel('$y$\,[mm]')
+    plt.xlabel(r'$x$\,[mm]')
+    plt.ylabel(r'$y$\,[mm]')
 
     plt.tight_layout()
     plt.savefig('xy_target.' + ext)
@@ -228,7 +228,7 @@ if __name__ == '__main__':
         theta = -math.pi * i / (num // 4)
         target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
     amps = 1.0 * np.ones(len(target_pos))
-    print( p1 / math.sqrt(len(target_pos)))
+    print(p1 / math.sqrt(len(target_pos)))
 
     # target_pos = []
     # target_pos.append(center + np.array([-20.0, 0.0, 0]))
@@ -243,7 +243,7 @@ if __name__ == '__main__':
     # target_pos.append(center)
     # amps = np.array([10.0])
 
-    ## 
+    ##
     # radius = 40.0
     # num = 5
     # target_pos = []
@@ -253,37 +253,37 @@ if __name__ == '__main__':
     # amps = p1/math.sqrt(len(target_pos)) * np.ones(len(target_pos))
 
     setup_pyplot()
-    ext = 'pdf'
+    ext = 'png'
     # plot_target_xy(target_pos, amps, ext = 'pdf')
 
     # ######### GHR-BF #####################
-    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'gbs', ext=ext)
 
-    ######### HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, True, False)
+    # ######## HORN #####################
+    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'horn', ext=ext)
 
     optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, False, True)
     plot_phase_xy(wave_sources, 'horn_non_amp_opt', ext=ext)
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, True, False)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'long', ext=ext)
 
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'long_non_amp_opt', ext=ext)
 
     # ####### Levenberg Marquardt #####################
-    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'lm', ext=ext)
 
-    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH, True, True)
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'lm_amp', ext=ext)
 
     # ####### GS-PAT #####################
-    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, False, True)
+    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'gspat', ext=ext)
 
-    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH, True, False)
+    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'gspat_amp', ext=ext)
