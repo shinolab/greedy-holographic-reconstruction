@@ -1,2 +1,0 @@
-[build]
-rustflags = ["-L", "/usr/local/lib", "-L", "/opt/openblas/lib"]
