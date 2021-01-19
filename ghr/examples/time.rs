@@ -136,7 +136,7 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 
 fn main() {
     let n_sqrt = 10;
-    let iter = 5;
+    let iter = 10;
 
     let m_max_pow = 6;
     let n_max_pow = 5;
@@ -155,7 +155,7 @@ fn main() {
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, m, n_sqrt, iter);
+        let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
             GreedyBruteForce::new(16, 1, WAVE_LENGTH),
@@ -209,7 +209,7 @@ fn main() {
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, m, n_sqrt, iter);
+        let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
             GreedyBruteForce::new(16, 1, WAVE_LENGTH),
