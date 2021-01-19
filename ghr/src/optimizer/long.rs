@@ -130,10 +130,6 @@ impl Optimizer for Long {
             q[i] = q[i] / avg_err;
         }
 
-        let mut max_coeff: Float = 0.0;
-        for v in q.iter() {
-            max_coeff = max_coeff.max(v.abs());
-        }
         for j in 0..n {
             let amp = q[j].abs().min(1.0);
             let phase = q[j].arg() + PI;
