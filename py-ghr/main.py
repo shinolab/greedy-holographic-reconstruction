@@ -71,7 +71,7 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
     ticks_step = 10.0
     bounds = buffer.bounds()
     array = buffer.get_array().reshape(bounds[0], bounds[1])
-    print(array.max())
+    print(name, ': ', array.max())
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
     heat_map = plot_helper.plot_acoustic_field_2d(axes, array, X_RANGE, Y_RANGE, RESOLUTION, ticks_step=ticks_step)
@@ -176,7 +176,7 @@ def calc_p1():
             i = x + y * NUM_TRANS_X
             wave_sources[i].pos = pos
             wave_sources[i].amp = 1.0
-            wave_sources[i].phase = 2.0 * math.pi * phase
+            wave_sources[i].phase = -2.0 * math.pi * phase
     calculator.update_amp_phase()
     calculator.update_source_geometry()
     buffer = BufferBuilder.new()\
@@ -213,7 +213,6 @@ if __name__ == '__main__':
     calculator.update_source_geometry()
 
     p1 = calc_p1()
-    print('p1: ' + str(p1))
 
     # SMILE
     radius = 45.0
@@ -243,14 +242,16 @@ if __name__ == '__main__':
     # target_pos.append(center)
     # amps = np.array([10.0])
 
-    ##
+    # #
     # radius = 40.0
     # num = 5
     # target_pos = []
     # for i in range(num):
     #     theta = 2 * math.pi * i / num
     #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # amps = p1/math.sqrt(len(target_pos)) * np.ones(len(target_pos))
+    # amps = p1 / math.sqrt(len(target_pos)) * np.ones(len(target_pos))
+
+    print('target amp: ', amps[0]**2)
 
     setup_pyplot()
     ext = 'png'
@@ -261,29 +262,17 @@ if __name__ == '__main__':
     plot_phase_xy(wave_sources, 'gbs', ext=ext)
 
     # ######## HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, 1000, 1e-3, 0.9)
     plot_phase_xy(wave_sources, 'horn', ext=ext)
 
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, False, True)
-    plot_phase_xy(wave_sources, 'horn_non_amp_opt', ext=ext)
-
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, 1.0)
     plot_phase_xy(wave_sources, 'long', ext=ext)
-
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH)
-    plot_phase_xy(wave_sources, 'long_non_amp_opt', ext=ext)
 
     # ####### Levenberg Marquardt #####################
     Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'lm', ext=ext)
 
-    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
-    plot_phase_xy(wave_sources, 'lm_amp', ext=ext)
-
     # ####### GS-PAT #####################
     Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH)
     plot_phase_xy(wave_sources, 'gspat', ext=ext)
-
-    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH)
-    plot_phase_xy(wave_sources, 'gspat_amp', ext=ext)

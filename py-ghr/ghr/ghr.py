@@ -190,7 +190,7 @@ class Optimizer():
                                                    c_double(wave_len))
 
     @staticmethod
-    def horn(calculate: Calculator, foci, amps, wave_len: float, repeat: int = 1000, plambda: float = 0.9):
+    def horn(calculate: Calculator, foci, amps, wave_len: float, repeat: int = 1000, alpha: float = 1e-3, plambda: float = 0.9):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -200,7 +200,15 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_Horn(calculate.handle, foci_array, amps, c_ulong(size), c_ulong(repeat), c_double(plambda), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_Horn(
+            calculate.handle,
+            foci_array,
+            amps,
+            c_ulong(size),
+            c_ulong(repeat),
+            c_double(alpha),
+            c_double(plambda),
+            c_double(wave_len))
 
     @staticmethod
     def long2014(calculate: Calculator, foci, amps, wave_len: float, gamma: float = 1.0):

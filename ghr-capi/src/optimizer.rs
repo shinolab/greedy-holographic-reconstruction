@@ -43,6 +43,7 @@ pub unsafe extern "C" fn GHR_Horn(
     amps: *const Float,
     size: u64,
     repeat: u64,
+    alpha: Float,
     lambda: Float,
     wave_len: Float,
 ) {
@@ -50,7 +51,7 @@ pub unsafe extern "C" fn GHR_Horn(
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut horn = Horn::new(repeat as _, lambda, wave_len);
+    let mut horn = Horn::new(repeat as _, alpha, lambda, wave_len);
     horn.set_target_foci(foci);
     horn.set_target_amps(amps);
     horn.optimize((*calc).wave_sources());

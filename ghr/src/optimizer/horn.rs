@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -26,16 +26,18 @@ pub struct Horn {
     amps: Vec<Float>,
     wave_length: Float,
     repeat: usize,
+    alpha: Float,
     lambda: Float,
 }
 
 impl Horn {
-    pub fn new(repeat: usize, lambda: Float, wave_length: Float) -> Self {
+    pub fn new(repeat: usize, alpha: Float, lambda: Float, wave_length: Float) -> Self {
         Self {
             foci: vec![],
             amps: vec![],
             wave_length,
             repeat,
+            alpha,
             lambda,
         }
     }
@@ -103,7 +105,7 @@ impl Optimizer for Horn {
         let foci = &self.foci;
         let amps = &self.amps;
 
-        let alpha = 1e-3;
+        let alpha = self.alpha;
         let m = foci.len();
         let n = num_trans;
         let mut b = Array::zeros((m, n));
@@ -174,8 +176,12 @@ impl Optimizer for Horn {
 
         let u = vecs.column(idx);
         let q = pinv_b.dot(&p).dot(&u);
+
+        let max_coef = q
+            .iter()
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(x.abs()));
         for j in 0..n {
-            let amp = 1.0;
+            let amp = q[j].abs() / max_coef;
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;
