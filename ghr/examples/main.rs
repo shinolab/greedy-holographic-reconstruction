@@ -20,10 +20,10 @@ use ghr::{
     Float, PI,
 };
 
-use std::fs::File;
+use std::{fs::File, time::Instant};
 
-const NUM_SOURCE_X: usize = 18;
-const NUM_SOURCE_Y: usize = 14;
+const NUM_SOURCE_X: usize = 16;
+const NUM_SOURCE_Y: usize = 16;
 const SOURCE_SIZE: Float = 10.18;
 const WAVE_LENGTH: Float = 8.5;
 
@@ -67,7 +67,7 @@ fn main() {
     }
     calculator.add_wave_sources(&transducers);
 
-    let num = 5;
+    let num = 64;
     let rad = 40.0;
     let mut target_pos = Vec::with_capacity(num);
     for i in 0..num {
@@ -98,40 +98,45 @@ fn main() {
     let mut optimizer = GreedyBruteForce::new(16, 1, WAVE_LENGTH);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
+    let start = Instant::now();
     optimizer.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    println!("GBS: {}", buffer.max());
-    write_image!("xy_ghr_p.png", buffer, bb);
+    // buffer.calculate(&calculator);
+    println!(
+        "GBS: p_max={}, time={} us",
+        buffer.max(),
+        start.elapsed().as_micros()
+    );
+    // write_image!("xy_ghr_p.png", buffer, bb);
 
-    let mut horn = Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH);
-    horn.set_target_foci(&target_pos);
-    horn.set_target_amps(&amps);
-    horn.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    println!("HORN: {}", buffer.max());
-    write_image!("xy_horn.png", buffer, bb);
+    // let mut horn = Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH);
+    // horn.set_target_foci(&target_pos);
+    // horn.set_target_amps(&amps);
+    // horn.optimize(calculator.wave_sources());
+    // buffer.calculate(&calculator);
+    // println!("HORN: {}", buffer.max());
+    // write_image!("xy_horn.png", buffer, bb);
 
-    let mut long = Long::new(1.0, WAVE_LENGTH);
-    long.set_target_foci(&target_pos);
-    long.set_target_amps(&amps);
-    long.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    println!("LONG: {}", buffer.max());
-    write_image!("xy_long.png", buffer, bb);
+    // let mut long = Long::new(1.0, WAVE_LENGTH);
+    // long.set_target_foci(&target_pos);
+    // long.set_target_amps(&amps);
+    // long.optimize(calculator.wave_sources());
+    // buffer.calculate(&calculator);
+    // println!("LONG: {}", buffer.max());
+    // write_image!("xy_long.png", buffer, bb);
 
-    let mut lm = LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH);
-    lm.set_target_foci(&target_pos);
-    lm.set_target_amps(&amps);
-    lm.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    println!("LM: {}", buffer.max());
-    write_image!("xy_lm.png", buffer, bb);
+    // let mut lm = LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH);
+    // lm.set_target_foci(&target_pos);
+    // lm.set_target_amps(&amps);
+    // lm.optimize(calculator.wave_sources());
+    // buffer.calculate(&calculator);
+    // println!("LM: {}", buffer.max());
+    // write_image!("xy_lm.png", buffer, bb);
 
-    let mut gspat = GSPAT::new(100, WAVE_LENGTH);
-    gspat.set_target_foci(&target_pos);
-    gspat.set_target_amps(&amps);
-    gspat.optimize(calculator.wave_sources());
-    buffer.calculate(&calculator);
-    println!("GS-PAT: {}", buffer.max());
-    write_image!("xy_gspat.png", buffer, bb);
+    // let mut gspat = GSPAT::new(100, WAVE_LENGTH);
+    // gspat.set_target_foci(&target_pos);
+    // gspat.set_target_amps(&amps);
+    // gspat.optimize(calculator.wave_sources());
+    // buffer.calculate(&calculator);
+    // println!("GS-PAT: {}", buffer.max());
+    // write_image!("xy_gspat.png", buffer, bb);
 }

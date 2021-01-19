@@ -135,10 +135,10 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 }
 
 fn main() {
-    let n_sqrt = 10;
+    let n_sqrt = 16;
     let iter = 10;
 
-    let m_max_pow = 6;
+    let m_max_pow = 10;
     let n_max_pow = 5;
 
     let focus_z = 150.0;
@@ -203,7 +203,7 @@ fn main() {
         );
     }
 
-    let m = 64;
+    let m = 128;
     for i in 2..=n_max_pow {
         let n_sqrt = 1 << i;
 
