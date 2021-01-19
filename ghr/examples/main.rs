@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -103,7 +103,7 @@ fn main() {
     println!("GBS: {}", buffer.max());
     write_image!("xy_ghr_p.png", buffer, bb);
 
-    let mut horn = Horn::new(1000, 0.9, WAVE_LENGTH);
+    let mut horn = Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH);
     horn.set_target_foci(&target_pos);
     horn.set_target_amps(&amps);
     horn.optimize(calculator.wave_sources());

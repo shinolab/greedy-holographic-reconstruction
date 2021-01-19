@@ -130,7 +130,7 @@ def __init_optimizer():
     GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_ulong, c_double]
     GHR_DLL.GHR_GreedyBruteForce.restypes = [None]
 
-    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double, c_double]
+    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double, c_double, c_double]
     GHR_DLL.GHR_Horn.restypes = [None]
 
     GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_double]
