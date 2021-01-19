@@ -15,7 +15,7 @@ Copyright (c) 2020 Hapis Lab. All rights reserved.
 from enum import IntEnum
 
 import ctypes
-from ctypes import c_void_p, byref, c_ulong, c_int, POINTER, c_double
+from ctypes import c_void_p, byref, c_ulong, c_int, POINTER, c_double, c_bool
 import numpy as np
 
 from . import nativemethods
@@ -51,15 +51,6 @@ class Calculator:
         size = nativemethods.GHR_DLL.GHR_WaveSources(self.handle, byref(ptr))
         array = ctypes.cast(ptr, POINTER(WaveSource * size)).contents
         return array
-
-    def set_wave_num(self, wave_num: float):
-        nativemethods.GHR_DLL.GHR_SetWaveNum(self.handle, c_double(wave_num))
-
-    def update_amp_phase(self):
-        nativemethods.GHR_DLL.GHR_UpdateAmpPhase(self.handle)
-
-    def update_source_geometry(self):
-        nativemethods.GHR_DLL.GHR_UpdateSourceGeometry(self.handle)
 
 
 class ScalarBuffer:
@@ -176,7 +167,8 @@ class CpuCalculator(Calculator):
 
 class Optimizer():
     @staticmethod
-    def greedy_brute_force(calculate: Calculator, foci, amps, wave_len: float, phase_div: int = 16, amp_div: int = 16):
+    def greedy_brute_force(calculate: Calculator, foci, amps, phase_div: int = 16,
+                           amp_div: int = 16, power_opt: bool = False, ramdamize: bool = False):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -186,11 +178,11 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_GreedyBruteForce(calculate.handle, foci_array, amps, c_ulong(size), c_ulong(phase_div), c_ulong(amp_div),
-                                                   c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_GreedyBruteForce(calculate.handle, foci_array, amps, c_ulong(
+            size), c_ulong(phase_div), c_ulong(amp_div), c_bool(power_opt), c_bool(ramdamize))
 
     @staticmethod
-    def horn(calculate: Calculator, foci, amps, wave_len: float, repeat: int = 1000, alpha: float = 1e-3, plambda: float = 0.9):
+    def horn(calculate: Calculator, foci, amps, repeat: int = 1000, alpha: float = 1e-3, plambda: float = 0.9):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -207,11 +199,10 @@ class Optimizer():
             c_ulong(size),
             c_ulong(repeat),
             c_double(alpha),
-            c_double(plambda),
-            c_double(wave_len))
+            c_double(plambda))
 
     @staticmethod
-    def long2014(calculate: Calculator, foci, amps, wave_len: float, gamma: float = 1.0):
+    def long2014(calculate: Calculator, foci, amps, gamma: float = 1.0):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -221,10 +212,10 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_Long(calculate.handle, foci_array, amps, c_ulong(size), c_double(gamma), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_Long(calculate.handle, foci_array, amps, c_ulong(size), c_double(gamma))
 
     @staticmethod
-    def levenberg_marquardt(calculate: Calculator, foci, amps, wave_len: float, eps_1: float = 1e-8,
+    def levenberg_marquardt(calculate: Calculator, foci, amps, eps_1: float = 1e-8,
                             eps_2: float = 1e-8, tau: float = 1e-3, repeat: int = 200):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
@@ -243,11 +234,10 @@ class Optimizer():
             c_double(eps_1),
             c_double(eps_2),
             c_double(tau),
-            c_ulong(repeat),
-            c_double(wave_len))
+            c_ulong(repeat))
 
     @staticmethod
-    def gspat(calculate: Calculator, foci, amps, wave_len: float, repeat: int = 100):
+    def gspat(calculate: Calculator, foci, amps, repeat: int = 100):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -257,4 +247,4 @@ class Optimizer():
             foci_array[3 * i + 1] = focus[1]
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
-        nativemethods.GHR_DLL.GHR_GSPAT(calculate.handle, foci_array, amps, c_ulong(size), c_ulong(repeat), c_double(wave_len))
+        nativemethods.GHR_DLL.GHR_GSPAT(calculate.handle, foci_array, amps, c_ulong(size), c_ulong(repeat))

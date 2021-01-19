@@ -173,7 +173,6 @@ def plot_phase_x(optimizer, wave_sources, name, ext='png'):
 
 def calc_p1():
     calculator = CpuCalculator()
-    calculator.set_wave_num(2.0 * math.pi / WAVE_LENGTH)
     calculator.init_wave_sources(NUM_TRANS_X * NUM_TRANS_Y)
     center = np.array([TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0, Z])
     wave_sources = calculator.wave_sources()
@@ -185,8 +184,6 @@ def calc_p1():
             wave_sources[i].pos = pos
             wave_sources[i].amp = 1.0
             wave_sources[i].phase = -2.0 * math.pi * phase
-    calculator.update_amp_phase()
-    calculator.update_source_geometry()
     buffer = BufferBuilder.new()\
         .x_at(center[0])\
         .y_at(center[1])\
@@ -200,7 +197,6 @@ def calc_p1():
 if __name__ == '__main__':
     # Initialize calculator
     calculator = CpuCalculator()
-    calculator.set_wave_num(2.0 * math.pi / WAVE_LENGTH)
 
     # Initialize sound sources
     calculator.init_wave_sources(NUM_TRANS_X * NUM_TRANS_Y)
@@ -217,8 +213,6 @@ if __name__ == '__main__':
             wave_sources[i].pos = pos
             wave_sources[i].amp = 0.0
             wave_sources[i].phase = 0.0
-    calculator.update_amp_phase()
-    calculator.update_source_geometry()
 
     p1 = calc_p1()
 
@@ -261,25 +255,25 @@ if __name__ == '__main__':
     print('target amp: ', amps[0]**2)
 
     setup_pyplot()
-    ext = 'pdf'
+    ext = 'png'
     plot_target_xy(target_pos, amps, ext=ext)
 
     # ######### GHR-BF #####################
-    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH)
+    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps)
     plot_phase_xy(wave_sources, 'gbs', ext=ext)
 
     # ######## HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, WAVE_LENGTH, 1000, 1e-3, 0.9)
+    optimizer = Optimizer.horn(calculator, target_pos, amps, 1000, 1e-3, 0.9)
     plot_phase_xy(wave_sources, 'horn', ext=ext)
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, WAVE_LENGTH, 1.0)
+    optimizer = Optimizer.long2014(calculator, target_pos, amps, 1.0)
     plot_phase_xy(wave_sources, 'long', ext=ext)
 
     # ####### Levenberg Marquardt #####################
-    Optimizer.levenberg_marquardt(calculator, target_pos, amps, WAVE_LENGTH)
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps)
     plot_phase_xy(wave_sources, 'lm', ext=ext)
 
     # ####### GS-PAT #####################
-    Optimizer.gspat(calculator, target_pos, amps, WAVE_LENGTH)
+    Optimizer.gspat(calculator, target_pos, amps)
     plot_phase_xy(wave_sources, 'gspat', ext=ext)

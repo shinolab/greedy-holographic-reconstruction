@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -85,26 +85,5 @@ pub unsafe extern "C" fn GHR_SetWaveSourcePhase(handle: *mut c_void, i: u64, pha
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
     sources[i as usize].phase = phase;
-    forget(calc);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_UpdateAmpPhase(handle: *mut c_void) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    (*calc).update_amp_phase();
-    forget(calc);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_UpdateSourceGeometry(handle: *mut c_void) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    (*calc).update_source_geometry();
-    forget(calc);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveNum(handle: *mut c_void, wave_num: Float) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    (*calc).set_wave_number(wave_num);
     forget(calc);
 }

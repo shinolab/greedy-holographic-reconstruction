@@ -23,13 +23,14 @@ pub unsafe extern "C" fn GHR_GreedyBruteForce(
     size: u64,
     phase_div: u64,
     amp_div: u64,
-    wave_len: Float,
+    power_opt: bool,
+    randamize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut gfs = GreedyBruteForce::new(phase_div as _, amp_div as _, wave_len);
+    let mut gfs = GreedyBruteForce::new(phase_div as _, amp_div as _, power_opt, randamize);
     gfs.set_target_foci(foci);
     gfs.set_target_amps(amps);
     gfs.optimize((*calc).wave_sources());
@@ -45,13 +46,12 @@ pub unsafe extern "C" fn GHR_Horn(
     repeat: u64,
     alpha: Float,
     lambda: Float,
-    wave_len: Float,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut horn = Horn::new(repeat as _, alpha, lambda, wave_len);
+    let mut horn = Horn::new(repeat as _, alpha, lambda);
     horn.set_target_foci(foci);
     horn.set_target_amps(amps);
     horn.optimize((*calc).wave_sources());
@@ -65,13 +65,12 @@ pub unsafe extern "C" fn GHR_Long(
     amps: *const Float,
     size: u64,
     gamma: Float,
-    wave_len: Float,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut long = Long::new(gamma, wave_len);
+    let mut long = Long::new(gamma);
     long.set_target_foci(foci);
     long.set_target_amps(amps);
     long.optimize((*calc).wave_sources());
@@ -88,13 +87,12 @@ pub unsafe extern "C" fn GHR_LM(
     eps_2: Float,
     tau: Float,
     repeat: u64,
-    wave_len: Float,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut lm = LM::new(eps_1, eps_2, tau, repeat as _, wave_len);
+    let mut lm = LM::new(eps_1, eps_2, tau, repeat as _);
     lm.set_target_foci(foci);
     lm.set_target_amps(amps);
     lm.optimize((*calc).wave_sources());
@@ -108,13 +106,12 @@ pub unsafe extern "C" fn GHR_GSPAT(
     amps: *const Float,
     size: u64,
     repeat: u64,
-    wave_len: Float,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut gspat = GSPAT::new(repeat as _, wave_len);
+    let mut gspat = GSPAT::new(repeat as _);
     gspat.set_target_foci(foci);
     gspat.set_target_amps(amps);
     gspat.optimize((*calc).wave_sources());

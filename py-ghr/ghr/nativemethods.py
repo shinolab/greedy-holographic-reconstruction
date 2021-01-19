@@ -13,7 +13,7 @@ Copyright (c) 2020 Hapis Lab. All rights reserved.
 
 
 import ctypes
-from ctypes import c_void_p, c_int, POINTER, c_ulong, Structure, c_double
+from ctypes import c_void_p, c_int, POINTER, c_ulong, Structure, c_double, c_bool
 
 
 class Vector3(Structure):
@@ -76,15 +76,6 @@ def __init_calculator():
     GHR_DLL.GHR_WaveSources.argtypes = [c_void_p, POINTER(c_void_p)]
     GHR_DLL.GHR_WaveSources.restypes = [c_ulong]
 
-    GHR_DLL.GHR_UpdateAmpPhase.argtypes = [c_void_p]
-    GHR_DLL.GHR_UpdateAmpPhase.restypes = [None]
-
-    GHR_DLL.GHR_UpdateSourceGeometry.argtypes = [c_void_p]
-    GHR_DLL.GHR_UpdateSourceGeometry.restypes = [None]
-
-    GHR_DLL.GHR_SetWaveNum.argtypes = [c_void_p, c_double]
-    GHR_DLL.GHR_SetWaveNum.restypes = [None]
-
 
 def __init_builder():
     GHR_DLL.GHR_CreateBufferBuilder.argtypes = [POINTER(c_void_p)]
@@ -127,17 +118,17 @@ def __init_buffer():
 
 
 def __init_optimizer():
-    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_ulong, c_double]
+    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_ulong, c_bool, c_bool]
     GHR_DLL.GHR_GreedyBruteForce.restypes = [None]
 
-    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double, c_double, c_double]
+    GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double, c_double]
     GHR_DLL.GHR_Horn.restypes = [None]
 
-    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_double]
+    GHR_DLL.GHR_Long.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double]
     GHR_DLL.GHR_Long.restypes = [None]
 
-    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_double, c_double, c_ulong, c_double]
+    GHR_DLL.GHR_LM.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_double, c_double, c_double, c_ulong]
     GHR_DLL.GHR_LM.restypes = [None]
 
-    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double]
+    GHR_DLL.GHR_GSPAT.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong]
     GHR_DLL.GHR_GSPAT.restypes = [None]
