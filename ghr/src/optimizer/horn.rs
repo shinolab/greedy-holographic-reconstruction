@@ -12,7 +12,8 @@
  */
 
 use crate::{
-    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
+    math_utils::c_norm, optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex,
+    Float, Vector3, PI,
 };
 
 use num_traits::identities::Zero;
@@ -24,18 +25,16 @@ use ndarray_linalg::*;
 pub struct Horn {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
-    wave_length: Float,
     repeat: usize,
     alpha: Float,
     lambda: Float,
 }
 
 impl Horn {
-    pub fn new(repeat: usize, alpha: Float, lambda: Float, wave_length: Float) -> Self {
+    pub fn new(repeat: usize, alpha: Float, lambda: Float) -> Self {
         Self {
             foci: vec![],
             amps: vec![],
-            wave_length,
             repeat,
             alpha,
             lambda,
@@ -110,12 +109,11 @@ impl Optimizer for Horn {
         let n = num_trans;
         let mut b = Array::zeros((m, n));
         let mut p = Array::zeros((m, m));
-        let wave_num = 2.0 * PI / self.wave_length;
         for i in 0..m {
             p[[i, i]] = Complex::new(amps[i], 0.);
             let tp = foci[i];
             for j in 0..n {
-                b[[i, j]] = transfer(wave_source[j].pos, tp, 1.0, 0.0, wave_num);
+                b[[i, j]] = transfer(wave_source[j].pos, tp, 1.0, 0.0);
             }
         }
 
@@ -167,7 +165,7 @@ impl Optimizer for Horn {
         let mut abs_eiv = 0.;
         let mut idx = 0;
         for j in 0..evs.len() {
-            let eiv = evs[j].abs();
+            let eiv = evs[j].norm_sqr();
             if abs_eiv < eiv {
                 abs_eiv = eiv;
                 idx = j;
@@ -179,9 +177,10 @@ impl Optimizer for Horn {
 
         let max_coef = q
             .iter()
-            .fold(Float::NEG_INFINITY, |acc, x| acc.max(x.abs()));
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(x.norm_sqr()))
+            .sqrt();
         for j in 0..n {
-            let amp = q[j].abs() / max_coef;
+            let amp = c_norm(q[j]) / max_coef;
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

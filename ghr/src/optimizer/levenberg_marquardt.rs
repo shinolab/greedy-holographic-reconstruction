@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -21,7 +21,6 @@ use ndarray_linalg::*;
 pub struct LM {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
-    wave_length: Float,
     eps_1: Float,
     eps_2: Float,
     tau: Float,
@@ -29,11 +28,10 @@ pub struct LM {
 }
 
 impl LM {
-    pub fn new(eps_1: Float, eps_2: Float, tau: Float, k_max: usize, wave_length: Float) -> Self {
+    pub fn new(eps_1: Float, eps_2: Float, tau: Float, k_max: usize) -> Self {
         Self {
             foci: vec![],
             amps: vec![],
-            wave_length: wave_length as _,
             eps_1,
             eps_2,
             tau,
@@ -64,7 +62,6 @@ impl LM {
         wave_source: &mut [WaveSource],
         n: usize,
         m: usize,
-        wave_num: Float,
     ) -> Array2<Complex> {
         let mut P = Array::zeros((m, m));
         let mut G = Array::zeros((m, n));
@@ -72,7 +69,7 @@ impl LM {
             P[[i, i]] = Complex::new(amps[i], 0.0);
             let fp = foci[i];
             for j in 0..n {
-                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0, wave_num);
+                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0);
             }
         }
         let B = stack![Axis(1), G, -P];
@@ -126,8 +123,6 @@ impl Optimizer for LM {
         let foci = &self.foci;
         let amps = &self.amps;
 
-        let wave_num = 2.0 * PI / self.wave_length;
-
         let m = foci.len();
         let n = num_trans;
 
@@ -143,7 +138,7 @@ impl Optimizer for LM {
 
         let I: ArrayBase<OwnedRepr<Float>, _> = Array::eye(n_param);
 
-        let BhB = Self::make_BhB(amps, foci, wave_source, n, m, wave_num);
+        let BhB = Self::make_BhB(amps, foci, wave_source, n, m);
 
         let mut x = x0;
         let mut nu = 2.0;
@@ -190,9 +185,10 @@ impl Optimizer for LM {
             }
         }
 
+        let pi2 = 2.0 * PI;
         for j in 0..n {
             let amp = 1.0;
-            let phase = (x[j] + PI) % (2.0 * PI);
+            let phase = x[j] - pi2 * (x[j] / pi2).floor();
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;
         }

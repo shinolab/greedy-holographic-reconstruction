@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 07/07/2020
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -16,9 +16,10 @@ extern crate itertools;
 
 pub mod buffer;
 pub mod calculator;
+pub mod consts;
+pub mod math_utils;
 pub mod optimizer;
 pub mod utils;
-pub mod vec_utils;
 pub mod wave_source;
 
 #[cfg(feature = "double")]

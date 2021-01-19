@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -12,7 +12,8 @@
  */
 
 use crate::{
-    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3, PI,
+    math_utils::c_norm, optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex,
+    Float, Vector3, PI,
 };
 
 use ndarray::*;
@@ -21,16 +22,14 @@ use ndarray_linalg::*;
 pub struct Long {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
-    wave_length: Float,
     gamma: Float,
 }
 
 impl Long {
-    pub fn new(gamma: Float, wave_length: Float) -> Self {
+    pub fn new(gamma: Float) -> Self {
         Self {
             foci: vec![],
             amps: vec![],
-            wave_length,
             gamma,
         }
     }
@@ -61,12 +60,10 @@ impl Optimizer for Long {
         let mut X = Array::zeros((n, m));
         let mut A = Array::zeros((m, n));
 
-        let wave_num = 2.0 * PI / self.wave_length;
-
         for i in 0..m {
             let fp = foci[i];
             for j in 0..n {
-                A[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0, wave_num);
+                A[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0);
             }
         }
 
@@ -83,10 +80,13 @@ impl Optimizer for Long {
         let R = A.dot(&X);
 
         let (d, V) = R.eig().unwrap();
+        let mut max_value = 0.0;
         let mut max_idx = 0;
         for (j, &value) in d.iter().enumerate() {
-            if value.abs() > d[max_idx].abs() {
+            let value = value.norm_sqr();
+            if value > max_value {
                 max_idx = j;
+                max_value = value;
             }
         }
 
@@ -100,7 +100,7 @@ impl Optimizer for Long {
         for j in 0..n {
             let mut sum = 0.0;
             for i in 0..m {
-                sum += A[[i, j]].abs() * amps[i];
+                sum += c_norm(A[[i, j]]) * amps[i];
             }
             let v = (sum / m as Float).sqrt();
             let v = Float::pow(&v, self.gamma);
@@ -123,7 +123,7 @@ impl Optimizer for Long {
         let ratio: Float = zc
             .iter()
             .zip(amps.iter())
-            .map(|(az, &a0)| az.abs() / a0)
+            .map(|(&az, &a0)| c_norm(az) / a0)
             .sum();
         let avg_err = m as Float / ratio;
         for i in 0..n {
@@ -131,7 +131,7 @@ impl Optimizer for Long {
         }
 
         for j in 0..n {
-            let amp = q[j].abs().min(1.0);
+            let amp = c_norm(q[j]).min(1.0);
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

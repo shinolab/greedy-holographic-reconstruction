@@ -14,8 +14,9 @@
 use ghr::{
     buffer::{generator::Amplitude, BufferBuilder},
     calculator::{Calculate, Calculator, CpuCalculator},
+    consts::WAVE_LENGTH,
+    math_utils::*,
     optimizer::*,
-    vec_utils::*,
     wave_source::WaveSource,
     Float, Vector3, PI,
 };
@@ -25,11 +26,9 @@ use rand::prelude::*;
 use std::time::Instant;
 
 const SOURCE_SIZE: Float = 10.0;
-const WAVE_LENGTH: Float = 8.5;
 
 fn calc_p1(focus: Vector3, n_sqrt: usize) -> Float {
     let mut calculator = CpuCalculator::new();
-    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
     let mut transducers = Vec::new();
     for y in 0..n_sqrt {
@@ -97,7 +96,6 @@ fn measure_time<T: Optimizer>(
     let mut opt = opt;
 
     let mut calculator = CpuCalculator::new();
-    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
     let mut transducers = Vec::new();
     for y in 0..n_sqrt {
@@ -158,7 +156,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
-            GreedyBruteForce::new(16, 1, WAVE_LENGTH),
+            GreedyBruteForce::new(16, 1, false, false),
             "gbf_16_1",
             n_sqrt,
             m,
@@ -167,7 +165,7 @@ fn main() {
         );
 
         measure_time(
-            Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH),
+            Horn::new(1000, 1e-3, 0.9),
             "horn",
             n_sqrt,
             m,
@@ -175,17 +173,10 @@ fn main() {
             &amps_set,
         );
 
-        measure_time(
-            Long::new(1.0, WAVE_LENGTH),
-            "long",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
+        measure_time(Long::new(1.0), "long", n_sqrt, m, &foci_set, &amps_set);
 
         measure_time(
-            LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH),
+            LM::new(1e-8, 1e-8, 1e-3, 200),
             "lm",
             n_sqrt,
             m,
@@ -193,14 +184,7 @@ fn main() {
             &amps_set,
         );
 
-        measure_time(
-            GSPAT::new(100, WAVE_LENGTH),
-            "gspat",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
+        measure_time(GSPAT::new(100), "gspat", n_sqrt, m, &foci_set, &amps_set);
     }
 
     let m = 128;
@@ -212,7 +196,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
-            GreedyBruteForce::new(16, 1, WAVE_LENGTH),
+            GreedyBruteForce::new(16, 1, false, false),
             "gbf_16_1",
             n_sqrt,
             m,
@@ -221,7 +205,7 @@ fn main() {
         );
 
         measure_time(
-            Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH),
+            Horn::new(1000, 1e-3, 0.9),
             "horn",
             n_sqrt,
             m,
@@ -229,17 +213,10 @@ fn main() {
             &amps_set,
         );
 
-        measure_time(
-            Long::new(1.0, WAVE_LENGTH),
-            "long",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
+        measure_time(Long::new(1.0), "long", n_sqrt, m, &foci_set, &amps_set);
 
         measure_time(
-            LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH),
+            LM::new(1e-8, 1e-8, 1e-3, 200),
             "lm",
             n_sqrt,
             m,
@@ -247,13 +224,6 @@ fn main() {
             &amps_set,
         );
 
-        measure_time(
-            GSPAT::new(100, WAVE_LENGTH),
-            "gspat",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
+        measure_time(GSPAT::new(100), "gspat", n_sqrt, m, &foci_set, &amps_set);
     }
 }

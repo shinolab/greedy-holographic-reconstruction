@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -18,20 +18,16 @@ use crate::{
     buffer::{AmplitudeFieldBuffer, ComplexFieldBufferScatter, FieldBuffer, IntensityFieldBuffer},
     utils::transfer,
     wave_source::WaveSource,
-    Complex, Float, PI,
+    Complex,
 };
 
 pub struct CpuCalculator {
     sources: Vec<WaveSource>,
-    wave_num: Float,
 }
 
 impl CpuCalculator {
     pub fn new() -> CpuCalculator {
-        CpuCalculator {
-            sources: vec![],
-            wave_num: 2.0 * PI / 8.5,
-        }
+        CpuCalculator { sources: vec![] }
     }
 }
 
@@ -43,7 +39,6 @@ impl std::default::Default for CpuCalculator {
 
 macro_rules! calc_from_complex_wave {
     ($val: ident, $exp: expr, $self: ident, $buffer: ident) => {{
-        let wave_num = $self.wave_num;
         $buffer
             .observe_points()
             .collect::<Vec<_>>()
@@ -51,13 +46,7 @@ macro_rules! calc_from_complex_wave {
             .map(|&observe_point| {
                 let mut $val = Complex::new(0., 0.);
                 for source in $self.sources.iter() {
-                    $val += transfer(
-                        source.pos,
-                        observe_point,
-                        source.amp,
-                        source.phase,
-                        wave_num,
-                    );
+                    $val += transfer(source.pos, observe_point, source.amp, source.phase);
                 }
                 $exp
             })
@@ -76,13 +65,6 @@ impl Calculator for CpuCalculator {
 
     fn wave_sources(&mut self) -> &mut [WaveSource] {
         &mut self.sources
-    }
-
-    fn update_amp_phase(&mut self) {}
-    fn update_source_geometry(&mut self) {}
-
-    fn set_wave_number(&mut self, wave_num: Float) {
-        self.wave_num = wave_num;
     }
 }
 

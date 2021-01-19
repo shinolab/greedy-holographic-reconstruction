@@ -14,8 +14,9 @@
 use ghr::{
     buffer::{generator::*, BufferBuilder, ComplexFieldBufferScatter, FieldBuffer},
     calculator::{Calculate, Calculator, CpuCalculator},
+    consts::WAVE_LENGTH,
+    math_utils::*,
     optimizer::*,
-    vec_utils::*,
     wave_source::WaveSource,
     Complex, Float, Vector3, PI,
 };
@@ -24,20 +25,18 @@ use ndarray_linalg::*;
 use rand::prelude::*;
 
 const SOURCE_SIZE: Float = 10.0;
-const WAVE_LENGTH: Float = 8.5;
 
 const N_SQRT: usize = 20;
 
 fn calc_p1(focus: Vector3) -> Float {
     let mut calculator = CpuCalculator::new();
-    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
     let mut transducers = Vec::new();
     for y in 0..N_SQRT {
         for x in 0..N_SQRT {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
-            transducers.push(WaveSource::new(pos, 1.0, -2.0 * PI * phase));
+            transducers.push(WaveSource::new(pos, 1.0, 2.0 * PI * (1.0 - phase)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -49,12 +48,11 @@ fn calc_p1(focus: Vector3) -> Float {
         .generate::<Amplitude>();
 
     buffer.calculate(&calculator);
-    buffer.buffer()[0] as f64
+    buffer.buffer()[0]
 }
 
 fn set_up() -> CpuCalculator {
     let mut calculator = CpuCalculator::new();
-    calculator.set_wave_number(2.0 * PI / WAVE_LENGTH);
 
     let mut transducers = Vec::new();
     for y in 0..N_SQRT {
@@ -199,7 +197,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
 
         test(
-            GreedyBruteForce::new(16, 16, WAVE_LENGTH),
+            GreedyBruteForce::new(16, 16, false, false),
             "gbf_16_16",
             m,
             &mut calculator,
@@ -208,7 +206,7 @@ fn main() {
         );
 
         test(
-            Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH),
+            Horn::new(1000, 1e-3, 0.9),
             "horn",
             m,
             &mut calculator,
@@ -217,7 +215,7 @@ fn main() {
         );
 
         test(
-            Long::new(1.0, WAVE_LENGTH),
+            Long::new(1.0),
             "long",
             m,
             &mut calculator,
@@ -226,7 +224,7 @@ fn main() {
         );
 
         test(
-            LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH),
+            LM::new(1e-8, 1e-8, 1e-3, 200),
             "lm",
             m,
             &mut calculator,
@@ -235,7 +233,7 @@ fn main() {
         );
 
         test(
-            GSPAT::new(100, WAVE_LENGTH),
+            GSPAT::new(100),
             "gspat",
             m,
             &mut calculator,

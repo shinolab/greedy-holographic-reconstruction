@@ -4,7 +4,7 @@
  * Created Date: 01/01/1970
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -12,18 +12,16 @@
  */
 
 use crate::{
-    float::Float, optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Vector3,
-    PI,
+    float::Float, math_utils::c_norm, optimizer::Optimizer, utils::transfer,
+    wave_source::WaveSource, Complex, Vector3, PI,
 };
 
 use ndarray::*;
-use ndarray_linalg::*;
 
 /// GS-PAT
 pub struct GSPAT {
     foci: Vec<Vector3>,
     amps: Vec<Float>,
-    wave_length: Float,
     repeat: usize,
 }
 
@@ -32,11 +30,10 @@ pub struct GSPAT {
 ///
 /// Not yet been implemented with GPU.
 impl GSPAT {
-    pub fn new(repeat: usize, wave_length: Float) -> Self {
+    pub fn new(repeat: usize) -> Self {
         Self {
             foci: vec![],
             amps: vec![],
-            wave_length,
             repeat,
         }
     }
@@ -57,8 +54,6 @@ impl Optimizer for GSPAT {
         let foci = &self.foci;
         let amps = &self.amps;
 
-        let wave_num = 2.0 * PI / self.wave_length;
-
         let m = foci.len();
         let n = num_trans;
 
@@ -66,7 +61,7 @@ impl Optimizer for GSPAT {
         for i in 0..m {
             let fp = foci[i];
             for j in 0..n {
-                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0, wave_num);
+                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0);
             }
         }
 
@@ -94,7 +89,7 @@ impl Optimizer for GSPAT {
             for (i, v) in gamma
                 .iter()
                 .zip(p0.iter())
-                .map(|(g, &p)| g / g.abs() * p)
+                .map(|(&g, &p)| g / c_norm(g) * p)
                 .enumerate()
             {
                 p[i] = v;
@@ -105,7 +100,7 @@ impl Optimizer for GSPAT {
         for (i, v) in gamma
             .iter()
             .zip(p0.iter())
-            .map(|(g, &p)| g / (g.abs() * g.abs()) * p * p)
+            .map(|(g, &p)| g / (g.norm_sqr()) * p * p)
             .enumerate()
         {
             p[i] = v;
@@ -114,7 +109,7 @@ impl Optimizer for GSPAT {
         let q = B.dot(&p);
 
         for j in 0..n {
-            let amp = q[j].abs().min(1.0);
+            let amp = c_norm(q[j]).min(1.0);
             let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
             wave_source[j].phase = phase;

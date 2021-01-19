@@ -4,14 +4,14 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use crate::{vec_utils::zero, Float, Vector3};
+use crate::{math_utils::zero, Float, Vector3};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
