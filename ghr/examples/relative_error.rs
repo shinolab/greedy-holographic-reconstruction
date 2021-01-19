@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 18/01/2021
+ * Last Modified: 19/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -37,7 +37,7 @@ fn calc_p1(focus: Vector3) -> Float {
         for x in 0..N_SQRT {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
-            transducers.push(WaveSource::new(pos, 1.0, 2.0 * PI * phase));
+            transducers.push(WaveSource::new(pos, 1.0, -2.0 * PI * phase));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -131,29 +131,24 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[(Float, Float
 fn test<T: Optimizer>(
     opt: T,
     name: &str,
+    m: usize,
     calculator: &mut CpuCalculator,
     foci_set: &[Vec<Vector3>],
     amps_set: &[Vec<Float>],
 ) {
     let mut opt = opt;
     let errors = relative_errors(&mut opt, calculator, &foci_set, &amps_set);
-    let mut wtr = csv::Writer::from_path(format!("relative_errors/{}.csv", name)).unwrap();
+    let mut wtr = csv::Writer::from_path(format!("relative_errors/{}_M{}.csv", name, m)).unwrap();
     write_data(&mut wtr, &errors);
+    println!("\t{} done", name);
 }
 
-fn main() {
-    let iter = 10;
-    let m = 4;
-
-    let focus_z = 150.0;
-    let center = [
-        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
-        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
-        focus_z,
-    ];
-    let obs_range = 100.0;
-
-    let mut calculator = set_up();
+fn generate_test_set(
+    center: Vector3,
+    obs_range: Float,
+    m: usize,
+    iter: usize,
+) -> (Vec<Vec<Vector3>>, Vec<Vec<Float>>) {
     let p1 = calc_p1(center);
 
     let mut rng = rand::thread_rng();
@@ -179,22 +174,73 @@ fn main() {
         foci_set.push(foci);
         amps_set.push(amps);
     }
+    (foci_set, amps_set)
+}
+
+fn main() {
+    let iter = 10;
+
+    let focus_z = 150.0;
+    let center = [
+        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
+        SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
+        focus_z,
+    ];
+
+    let mut calculator = set_up();
 
     std::fs::create_dir("relative_errors").unwrap_or(());
 
-    test(
-        GreedyBruteForce::new(16, 1, WAVE_LENGTH),
-        "gbf_16_1",
-        &mut calculator,
-        &foci_set,
-        &amps_set,
-    );
+    let test_foci_nums: Vec<usize> = vec![2, 4, 8, 16, 32];
 
-    test(
-        GSPAT::new(100, WAVE_LENGTH),
-        "gspat",
-        &mut calculator,
-        &foci_set,
-        &amps_set,
-    );
+    for m in test_foci_nums {
+        println!("testing {}", m);
+
+        let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
+
+        test(
+            GreedyBruteForce::new(16, 16, WAVE_LENGTH),
+            "gbf_16_16",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+
+        test(
+            Horn::new(1000, 1e-3, 0.9, WAVE_LENGTH),
+            "horn",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+
+        test(
+            Long::new(1.0, WAVE_LENGTH),
+            "long",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+
+        test(
+            LM::new(1e-8, 1e-8, 1e-3, 200, WAVE_LENGTH),
+            "lm",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+
+        test(
+            GSPAT::new(100, WAVE_LENGTH),
+            "gspat",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+    }
 }

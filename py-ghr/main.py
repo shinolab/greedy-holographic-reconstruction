@@ -50,7 +50,7 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
     RESOLUTION = 0.5
 
     # show phases
-    DPI = 72
+    DPI = 300
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
 
@@ -104,7 +104,7 @@ def plot_target_xy(target_pos, amp, ext='pdf'):
 
     scat_x = list(map(lambda s: s[0] - TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0, target_pos))
     scat_y = list(map(lambda s: s[1] - TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0, target_pos))
-    axes.scatter(scat_x, scat_y, s=400, c='black', marker='.', vmin=0, vmax=amp.max())
+    scat = axes.scatter(scat_x, scat_y, s=400, c='black', marker='.', vmin=0, vmax=amp.max())
 
     x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
     y_label_num = int(math.floor((Y_RANGE[1] - Y_RANGE[0]) / ticks_step)) + 1
@@ -120,6 +120,14 @@ def plot_target_xy(target_pos, amp, ext='pdf'):
     plt.xlabel(r'$x$\,[mm]')
     plt.ylabel(r'$y$\,[mm]')
 
+    divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
+    cax = divider.append_axes('right', '5%', pad='3%', alpha=0.2)
+    cb = fig.colorbar(scat, cax=cax)
+    cb.outline.set_edgecolor([0, 0, 0, 0.0])
+    cb.ax.tick_params(axis='both', colors=[0, 0, 0, 0.0])
+    cb.ax.yaxis.label.set_color([0, 0, 0, 0.0])
+    cb.solids.set_alpha(0)
+    cb.patch.set_alpha(0)
     plt.tight_layout()
     plt.savefig('xy_target.' + ext)
 
@@ -130,7 +138,7 @@ def plot_phase_x(optimizer, wave_sources, name, ext='png'):
     RESOLUTION = 1.0
 
     # show phases
-    DPI = 72
+    DPI = 300
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
 
@@ -227,7 +235,6 @@ if __name__ == '__main__':
         theta = -math.pi * i / (num // 4)
         target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
     amps = 1.0 * np.ones(len(target_pos))
-    print(p1 / math.sqrt(len(target_pos)))
 
     # target_pos = []
     # target_pos.append(center + np.array([-20.0, 0.0, 0]))
@@ -254,8 +261,8 @@ if __name__ == '__main__':
     print('target amp: ', amps[0]**2)
 
     setup_pyplot()
-    ext = 'png'
-    # plot_target_xy(target_pos, amps, ext = 'pdf')
+    ext = 'pdf'
+    plot_target_xy(target_pos, amps, ext=ext)
 
     # ######### GHR-BF #####################
     optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps, WAVE_LENGTH)
