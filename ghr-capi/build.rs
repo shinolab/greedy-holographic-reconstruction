@@ -11,6 +11,19 @@
  *
  */
 
+#[cfg(target_os = "windows")]
+fn main() {
+    use std::env;
+    let key = "CONDA_HOME";
+    if let Some(val) = env::var_os(key) {
+        println!(
+            r"cargo:rustc-link-search={}\Library\lib",
+            val.into_string().unwrap()
+        );
+    }
+    println!(r"cargo:rustc-link-search=C:\opt\lib");
+}
+
 #[cfg(target_os = "linux")]
 fn main() {
     println!("cargo:rustc-link-search=/opt/openblas/lib");
@@ -19,6 +32,4 @@ fn main() {
 #[cfg(target_os = "macos")]
 fn main() {
     println!("cargo:rustc-link-search=/usr/local/opt/openblas/lib");
-    println!("cargo:rustc-link-search=/usr/local/opt/lapack/lib");
-    println!("cargo:rustc-link-search=/usr/local/lib/gcc/10/");
 }
