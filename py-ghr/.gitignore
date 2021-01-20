@@ -140,4 +140,4 @@ cython_debug/
 *.pdf
 .vscode/
 *.png
-*.dll
+ghr/bin/*
