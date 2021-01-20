@@ -19,6 +19,4 @@ fn main() {
 #[cfg(target_os = "macos")]
 fn main() {
     println!("cargo:rustc-link-search=/usr/local/opt/openblas/lib");
-    println!("cargo:rustc-link-search=/usr/local/opt/lapack/lib");
-    println!("cargo:rustc-link-search=/usr/local/lib/gcc/10/");
 }

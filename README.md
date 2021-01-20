@@ -1,11 +1,21 @@
 # Greedy Holographic Reconstruction
 
-This programs are only tested on Ubuntu.
+This programs are relies on OpenBLAS.
 
-## Requirement
+# Install OpenBLAS
 
-* OpenBLAS
-* LAPACK
+## Linux
+
+* use 'openblas_install.sh'
+
+## macOS
+
+* install via homebrew
+    ```
+    brew install openblas
+    ```
+
+* otherwise, you must specify OpenBLAS path in 'build.rs'.
 
 # Author
 
