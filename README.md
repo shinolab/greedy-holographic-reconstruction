@@ -9,6 +9,7 @@ These programs rely on OpenBLAS.
 ## Linux
 
 * Use `openblas_install.sh`
+* Then add `/opt/openblas/lib` to `LD_LIBRARY_PATH` (e.g. add `export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/openblas/lib"` in ~/.bashrc or etc.)
 
 ## macOS
 
@@ -38,6 +39,9 @@ These programs rely on OpenBLAS.
     ```
 
 * Then, add environment variable `CONDA_HOME` and set Anaconda home directory path to link `flangmain.lib`.
+
+* If you get `LINK : fatal error LNK1181: cannot open input file 'gfortran.lib'`, please copy `win/gfortran.lib` to `C:\opt\lib\`.
+    * This file is just empty lib. `openblas-src` doesn't seem to actually use gfortran, but requires `gfortran.lib`. So, just link the empty lib file.
 
 * See also [OpenBLAS official instruction](https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio). 
 

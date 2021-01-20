@@ -17,7 +17,7 @@ fn main() {
     let key = "CONDA_HOME";
     if let Some(val) = env::var_os(key) {
         println!(
-            r"cargo:rustc-link-search={}\Library\lib",
+            r"cargo:rustc-link-search=native={}\Library\lib",
             val.into_string().unwrap()
         );
     }
