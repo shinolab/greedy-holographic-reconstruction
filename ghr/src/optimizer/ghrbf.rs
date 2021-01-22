@@ -66,23 +66,18 @@ impl GreedyBruteForce {
                 G[i] = transfer(wave_source.pos, self.foci[i]);
             }
 
-            let mut min_phase = Complex::new(0., 0.);
-            let mut min_amp = Complex::new(0., 0.);
+            let mut min_q = Complex::new(0., 0.);
             let mut min_v = Float::INFINITY;
-
-            let mut amp = amp_step;
-
-            for _ in 0..self.amp_division {
-                let mut phase = Complex::new(1., 0.);
+            for i in 0..self.amp_division {
+                let mut q = i as Float * amp_step;
                 for _ in 0..self.phase_division {
-                    let r = amp * &G * phase;
+                    let r = &G * q;
                     let v = ((&r + &cache).map(|c| c_norm(*c)) - &amps)
                         .map(|x| x.abs())
                         .sum();
                     if v < min_v {
                         min_v = v;
-                        min_phase = phase;
-                        min_amp = amp;
+                        min_q = q;
                         unsafe {
                             std::ptr::copy_nonoverlapping(
                                 r.as_ptr(),
@@ -91,14 +86,12 @@ impl GreedyBruteForce {
                             );
                         }
                     }
-                    phase *= phase_step;
+                    q *= phase_step;
                 }
-                amp += amp_step;
             }
 
             cache = cache + &good_field;
-            wave_source.amp = min_amp.abs();
-            wave_source.phase = min_phase;
+            wave_source.q = min_q;
         }
     }
 }

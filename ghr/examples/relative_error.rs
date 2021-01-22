@@ -38,7 +38,6 @@ fn calc_p1(focus: Vector3) -> Float {
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
             transducers.push(WaveSource::new(
                 pos,
-                1.0,
                 Complex::new(0., 2.0 * PI * (1.0 - phase)).exp(),
             ));
         }
@@ -62,7 +61,7 @@ fn set_up() -> CpuCalculator {
     for y in 0..N_SQRT {
         for x in 0..N_SQRT {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
+            transducers.push(WaveSource::new(pos, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);

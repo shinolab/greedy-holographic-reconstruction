@@ -110,8 +110,7 @@ impl Optimizer for GSPAT {
 
         for j in 0..n {
             let amp = c_norm(q[j]).min(1.0);
-            wave_source[j].amp = amp;
-            wave_source[j].phase = q[j];
+            wave_source[j].q = q[j] / c_norm(q[j]) * amp;
         }
     }
 }

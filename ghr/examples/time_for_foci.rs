@@ -37,7 +37,6 @@ fn calc_p1(focus: Vector3, n_sqrt: usize) -> Float {
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
             transducers.push(WaveSource::new(
                 pos,
-                1.0,
                 Complex::new(0., 2.0 * PI * (1.0 - phase)).exp(),
             ));
         }
@@ -105,7 +104,7 @@ fn measure_time<T: Optimizer>(
     for y in 0..n_sqrt {
         for x in 0..n_sqrt {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
+            transducers.push(WaveSource::new(pos, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -113,8 +112,7 @@ fn measure_time<T: Optimizer>(
     let mut elasped = Vec::new();
     for (foci, amps) in foci_set.iter().zip(amps_set.iter()) {
         for source in calculator.wave_sources() {
-            source.amp = 1.0;
-            source.phase = Complex::new(0., 0.);
+            source.q = Complex::new(1., 0.);
         }
         opt.set_target_foci(foci);
         opt.set_target_amps(amps);
@@ -124,8 +122,13 @@ fn measure_time<T: Optimizer>(
         elasped.push(start.elapsed().as_micros());
     }
 
-    let mut wtr =
-        csv::Writer::from_path(format!("times/{}_M{}_N{}.csv", name, m, n_sqrt * n_sqrt)).unwrap();
+    let mut wtr = csv::Writer::from_path(format!(
+        "times_foci/{}_M{}_N{}.csv",
+        name,
+        m,
+        n_sqrt * n_sqrt
+    ))
+    .unwrap();
     write_data(&mut wtr, &elasped);
     println!("\t{} done", name);
 }
@@ -141,7 +144,6 @@ fn main() {
     let iter = 10;
 
     let m_max_pow = 10;
-    let n_max_pow = 5;
 
     let focus_z = 150.0;
     let center = [
@@ -150,50 +152,10 @@ fn main() {
         focus_z,
     ];
 
-    std::fs::create_dir("times").unwrap_or(());
+    std::fs::create_dir("times_foci").unwrap_or(());
 
     for i in 1..=m_max_pow {
         let m = 1 << i;
-
-        println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
-
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
-
-        measure_time(
-            GreedyBruteForce::new(16, 1, false),
-            "gbf_16_1",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
-
-        measure_time(
-            Horn::new(1000, 1e-3, 0.9),
-            "horn",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
-
-        measure_time(Long::new(1.0), "long", n_sqrt, m, &foci_set, &amps_set);
-
-        measure_time(
-            LM::new(1e-8, 1e-8, 1e-3, 200),
-            "lm",
-            n_sqrt,
-            m,
-            &foci_set,
-            &amps_set,
-        );
-
-        measure_time(GSPAT::new(100), "gspat", n_sqrt, m, &foci_set, &amps_set);
-    }
-
-    let m = 128;
-    for i in 2..=n_max_pow {
-        let n_sqrt = 1 << i;
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 

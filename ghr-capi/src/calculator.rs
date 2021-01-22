@@ -11,7 +11,7 @@
  *
  */
 
-use ghr::{calculator::*, wave_source::WaveSource, Complex, Float};
+use ghr::{calculator::*, wave_source::WaveSource};
 
 use std::{ffi::c_void, mem::forget};
 
@@ -51,39 +51,4 @@ pub unsafe extern "C" fn GHR_WaveSources(handle: *mut c_void, out: *mut *mut c_v
     forget(calc);
     *out = ptr as *mut c_void;
     len as u64
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveSourceProps(
-    handle: *mut c_void,
-    i: u64,
-    x: Float,
-    y: Float,
-    z: Float,
-    amp: Float,
-    phase: Float,
-) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    let sources = (*calc).wave_sources();
-    let idx = i as usize;
-    sources[idx].pos = [x, y, z];
-    sources[idx].amp = amp;
-    sources[idx].phase = Complex::new(0., phase).exp();
-    forget(calc);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveSourceAmp(handle: *mut c_void, i: u64, amp: Float) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    let sources = (*calc).wave_sources();
-    sources[i as usize].amp = amp;
-    forget(calc);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn GHR_SetWaveSourcePhase(handle: *mut c_void, i: u64, phase: Float) {
-    let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
-    let sources = (*calc).wave_sources();
-    sources[i as usize].phase = Complex::new(0., phase).exp();
-    forget(calc);
 }

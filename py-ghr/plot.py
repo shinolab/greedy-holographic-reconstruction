@@ -4,14 +4,14 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 19/01/2021
+Last Modified: 22/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
 
 '''
 
-
+import os
 import math
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,7 +56,7 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
 
     scat = plot_helper.plot_phase_2d(fig, axes, wave_sources, TRANS_SIZE)
     plot_helper.add_colorbar(fig, axes, scat)
-    plt.savefig('phase_' + name + '.' + ext)
+    plt.savefig(name + '_phase.' + ext)
 
     # generate buffer
     buffer = BufferBuilder.new()\
@@ -88,10 +88,10 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
     cax = divider.append_axes('right', '5%', pad='3%')
     fig.colorbar(heat_map, cax=cax)
     plt.tight_layout()
-    plt.savefig('xy_' + name + '.' + ext)
+    plt.savefig(name + '_xy.' + ext)
 
 
-def plot_target_xy(target_pos, amp, ext='pdf'):
+def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
     # Observe properties, units are mm
     X_RANGE = (TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 + R / 2)
     Y_RANGE = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
@@ -129,69 +129,7 @@ def plot_target_xy(target_pos, amp, ext='pdf'):
     cb.solids.set_alpha(0)
     cb.patch.set_alpha(0)
     plt.tight_layout()
-    plt.savefig('xy_target.' + ext)
-
-
-def plot_phase_x(optimizer, wave_sources, name, ext='png'):
-    # Observe properties, units are mm
-    X_RANGE = (TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 + R / 2)
-    RESOLUTION = 1.0
-
-    # show phases
-    DPI = 300
-    fig = plt.figure(figsize=(6, 6), dpi=DPI)
-    axes = fig.add_subplot(111, aspect='equal')
-
-    scat = plot_helper.plot_phase_2d(fig, axes, wave_sources, TRANS_SIZE)
-    plot_helper.add_colorbar(fig, axes, scat)
-    plt.savefig('phase_' + name + '.' + ext)
-
-    # generate buffer
-    buffer = BufferBuilder.new()\
-        .x_range(X_RANGE)\
-        .y_at(TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0)\
-        .z_at(Z)\
-        .resolution(RESOLUTION)\
-        .generate(FieldType.Pressure)
-    buffer.calculate(calculator)
-
-    # plot
-    bounds = buffer.bounds()
-    array = buffer.get_array().reshape(bounds[0])
-    fig = plt.figure(figsize=(6, 6), dpi=DPI)
-    axes = fig.add_subplot(111)
-    ticks_step = 10.0
-    plt.plot(array)
-    x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
-    x_labels = [X_RANGE[0] + ticks_step * i for i in range(x_label_num)]
-    x_ticks = [ticks_step / RESOLUTION * i for i in range(x_label_num)]
-    axes.set_xticks(np.array(x_ticks) + 0.5, minor=False)
-    axes.set_xticklabels(x_labels, minor=False)
-
-    plt.savefig('xy_' + name + '.' + ext)
-
-
-def calc_p1():
-    calculator = CpuCalculator()
-    calculator.init_wave_sources(NUM_TRANS_X * NUM_TRANS_Y)
-    center = np.array([TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0, Z])
-    wave_sources = calculator.wave_sources()
-    for y in range(NUM_TRANS_Y):
-        for x in range(NUM_TRANS_X):
-            pos = np.array([TRANS_SIZE * x, TRANS_SIZE * y, 0.])
-            phase = (np.linalg.norm(pos - center) % WAVE_LENGTH) / WAVE_LENGTH
-            i = x + y * NUM_TRANS_X
-            wave_sources[i].pos = pos
-            wave_sources[i].amp = 1.0
-            wave_sources[i].phase = -2.0 * math.pi * phase
-    buffer = BufferBuilder.new()\
-        .x_at(center[0])\
-        .y_at(center[1])\
-        .z_at(center[2])\
-        .resolution(1.0)\
-        .generate(FieldType.Pressure)
-    buffer.calculate(calculator)
-    return buffer.get_array()[0]
+    plt.savefig(img_dir + '/xy_target.' + ext)
 
 
 if __name__ == '__main__':
@@ -214,8 +152,6 @@ if __name__ == '__main__':
             wave_sources[i].amp = 0.0
             wave_sources[i].phase = 0.0
 
-    p1 = calc_p1()
-
     # SMILE
     radius = 45.0
     num = 30
@@ -230,50 +166,32 @@ if __name__ == '__main__':
         target_pos.append(center + radius * 0.6 * np.array([math.cos(theta), math.sin(theta), 0.0]))
     amps = 1.0 * np.ones(len(target_pos))
 
-    # target_pos = []
-    # target_pos.append(center + np.array([-20.0, 0.0, 0]))
-    # target_pos.append(center + np.array([20.0, 0.0, 0]))
-    # amps = np.array([5.0, 5.0])
-
-    # target_pos = []
-    # target_pos.append(center)
-    # amps = np.array([1.0])
-
-    # target_pos = []
-    # target_pos.append(center)
-    # amps = np.array([10.0])
-
-    # #
-    # radius = 40.0
-    # num = 5
-    # target_pos = []
-    # for i in range(num):
-    #     theta = 2 * math.pi * i / num
-    #     target_pos.append(center + radius * np.array([math.cos(theta), math.sin(theta), 0.0]))
-    # amps = p1 / math.sqrt(len(target_pos)) * np.ones(len(target_pos))
-
     print('target amp: ', amps[0]**2)
 
     setup_pyplot()
-    ext = 'png'
-    plot_target_xy(target_pos, amps, ext=ext)
+    ext = 'pdf'
+
+    img_dir = 'img'
+    os.makedirs(img_dir, exist_ok=True)
+
+    plot_target_xy(target_pos, amps, img_dir, ext=ext)
 
     # ######### GHR-BF #####################
     optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, 'gbs', ext=ext)
+    plot_phase_xy(wave_sources, img_dir + '/gbs', ext=ext)
 
     # ######## HORN #####################
     optimizer = Optimizer.horn(calculator, target_pos, amps, 1000, 1e-3, 0.9)
-    plot_phase_xy(wave_sources, 'horn', ext=ext)
+    plot_phase_xy(wave_sources, img_dir + '/horn', ext=ext)
 
     # ######## Long #####################
     optimizer = Optimizer.long2014(calculator, target_pos, amps, 1.0)
-    plot_phase_xy(wave_sources, 'long', ext=ext)
+    plot_phase_xy(wave_sources, img_dir + '/long', ext=ext)
 
     # ####### Levenberg Marquardt #####################
     Optimizer.levenberg_marquardt(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, 'lm', ext=ext)
+    plot_phase_xy(wave_sources, img_dir + '/lm', ext=ext)
 
     # ####### GS-PAT #####################
     Optimizer.gspat(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, 'gspat', ext=ext)
+    plot_phase_xy(wave_sources, img_dir + '/gspat', ext=ext)

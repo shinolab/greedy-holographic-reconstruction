@@ -39,7 +39,7 @@ fn main() {
     for y in 0..NUM_SOURCE_Y {
         for x in 0..NUM_SOURCE_X {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
+            transducers.push(WaveSource::new(pos, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);

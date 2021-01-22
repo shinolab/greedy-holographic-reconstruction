@@ -27,12 +27,11 @@ class Vector3(Structure):
 
 
 class WaveSource(Structure):
-    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double), ("amp", c_double), ("phase_re", c_double), ("phase_im", c_double)]
+    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double), ("phase_re", c_double), ("phase_im", c_double)]
 
-    def __init__(self, position, amp, phase):
+    def __init__(self, position, phase):
         super().__init__()
         self.pos = position
-        self.amp = amp
         self.phase = phase
 
     @property

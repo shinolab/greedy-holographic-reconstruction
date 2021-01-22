@@ -186,8 +186,7 @@ impl Optimizer for LM {
         }
 
         for j in 0..n {
-            wave_source[j].amp = 1.0;
-            wave_source[j].phase = Complex::new(0., x[j]).exp();
+            wave_source[j].q = Complex::new(0., x[j]).exp();
         }
     }
 }

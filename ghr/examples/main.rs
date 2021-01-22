@@ -58,7 +58,7 @@ fn main() {
     for y in 0..NUM_SOURCE_Y {
         for x in 0..NUM_SOURCE_X {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
+            transducers.push(WaveSource::new(pos, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -91,13 +91,15 @@ fn main() {
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
 
+    std::fs::create_dir("img").unwrap_or(());
+
     let mut optimizer = GreedyBruteForce::new(16, 16, false);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
     optimizer.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
     println!("GBS: {}", buffer.max());
-    write_image!("xy_gbs.png", buffer, bb);
+    write_image!("img/xy_gbs.png", buffer, bb);
 
     let mut horn = Horn::new(1000, 1e-3, 0.9);
     horn.set_target_foci(&target_pos);
@@ -105,7 +107,7 @@ fn main() {
     horn.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
     println!("HORN: {}", buffer.max());
-    write_image!("xy_horn.png", buffer, bb);
+    write_image!("img/xy_horn.png", buffer, bb);
 
     let mut long = Long::new(1.0);
     long.set_target_foci(&target_pos);
@@ -113,7 +115,7 @@ fn main() {
     long.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
     println!("LONG: {}", buffer.max());
-    write_image!("xy_long.png", buffer, bb);
+    write_image!("img/xy_long.png", buffer, bb);
 
     let mut lm = LM::new(1e-8, 1e-8, 1e-3, 200);
     lm.set_target_foci(&target_pos);
@@ -121,7 +123,7 @@ fn main() {
     lm.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
     println!("LM: {}", buffer.max());
-    write_image!("xy_lm.png", buffer, bb);
+    write_image!("img/xy_lm.png", buffer, bb);
 
     let mut gspat = GSPAT::new(100);
     gspat.set_target_foci(&target_pos);
@@ -129,5 +131,5 @@ fn main() {
     gspat.optimize(calculator.wave_sources());
     buffer.calculate(&calculator);
     println!("GS-PAT: {}", buffer.max());
-    write_image!("xy_gspat.png", buffer, bb);
+    write_image!("img/xy_gspat.png", buffer, bb);
 }

@@ -173,16 +173,28 @@ impl Optimizer for Horn {
         }
 
         let u = vecs.column(idx);
-        let q = pinv_b.dot(&p).dot(&u);
+        let mut q = pinv_b.dot(&p).dot(&u);
 
-        let max_coef = q
+        // Correction
+        let zc = b.dot(&q);
+        let ratio: Float = zc
             .iter()
-            .fold(Float::NEG_INFINITY, |acc, x| acc.max(x.norm_sqr()))
-            .sqrt();
+            .zip(amps.iter())
+            .map(|(&az, &a0)| c_norm(az) / a0)
+            .sum();
+        let avg_err = m as Float / ratio;
+        for i in 0..n {
+            q[i] = q[i] / avg_err;
+        }
+
+        // let max_coef = q
+        //     .iter()
+        //     .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)))
+        //     .sqrt();
         for j in 0..n {
-            let amp = c_norm(q[j]) / max_coef;
-            wave_source[j].amp = amp;
-            wave_source[j].phase = q[j];
+            // wave_source[j].q = q[j] / max_coef;
+            let amp = c_norm(q[j]).min(1.0);
+            wave_source[j].q = q[j] / c_norm(q[j]) * amp;
         }
     }
 }

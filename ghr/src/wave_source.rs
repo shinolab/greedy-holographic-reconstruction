@@ -11,24 +11,23 @@
  *
  */
 
-use crate::{math_utils::zero, Complex, Float, Vector3};
+use crate::{math_utils::zero, Complex, Vector3};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct WaveSource {
     pub pos: Vector3,
-    pub amp: Float,
-    pub phase: Complex,
+    pub q: Complex,
 }
 
 impl WaveSource {
-    pub fn new(pos: Vector3, amp: Float, phase: Complex) -> Self {
-        Self { pos, amp, phase }
+    pub fn new(pos: Vector3, phase: Complex) -> Self {
+        Self { pos, q: phase }
     }
 }
 
 impl std::default::Default for WaveSource {
     fn default() -> Self {
-        Self::new(zero(), 0., Complex::new(0.,0.))
+        Self::new(zero(), Complex::new(0., 0.))
     }
 }
