@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 19/01/2021
+Last Modified: 22/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -168,7 +168,7 @@ class CpuCalculator(Calculator):
 class Optimizer():
     @staticmethod
     def greedy_brute_force(calculate: Calculator, foci, amps, phase_div: int = 16,
-                           amp_div: int = 16, power_opt: bool = False, ramdamize: bool = False):
+                           amp_div: int = 16, ramdomize: bool = False):
         size = len(foci)
         amps = np.array(amps).astype(np.float64)
         amps = np.ctypeslib.as_ctypes(amps)
@@ -179,7 +179,7 @@ class Optimizer():
             foci_array[3 * i + 2] = focus[2]
         foci_array = np.ctypeslib.as_ctypes(foci_array)
         nativemethods.GHR_DLL.GHR_GreedyBruteForce(calculate.handle, foci_array, amps, c_ulong(
-            size), c_ulong(phase_div), c_ulong(amp_div), c_bool(power_opt), c_bool(ramdamize))
+            size), c_ulong(phase_div), c_ulong(amp_div), c_bool(ramdomize))
 
     @staticmethod
     def horn(calculate: Calculator, foci, amps, repeat: int = 1000, alpha: float = 1e-3, plambda: float = 0.9):

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,7 +13,7 @@
 
 use crate::{
     math_utils::c_norm, optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex,
-    Float, Vector3, PI,
+    Float, Vector3,
 };
 
 use num_traits::identities::Zero;
@@ -113,7 +113,7 @@ impl Optimizer for Horn {
             p[[i, i]] = Complex::new(amps[i], 0.);
             let tp = foci[i];
             for j in 0..n {
-                b[[i, j]] = transfer(wave_source[j].pos, tp, 1.0, 0.0);
+                b[[i, j]] = transfer(wave_source[j].pos, tp);
             }
         }
 
@@ -181,9 +181,8 @@ impl Optimizer for Horn {
             .sqrt();
         for j in 0..n {
             let amp = c_norm(q[j]) / max_coef;
-            let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
-            wave_source[j].phase = phase;
+            wave_source[j].phase = q[j];
         }
     }
 }

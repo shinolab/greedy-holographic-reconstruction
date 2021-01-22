@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 26/06/2020
+Last Modified: 22/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -13,6 +13,7 @@ Copyright (c) 2020 Hapis Lab. All rights reserved.
 
 
 import math
+import cmath
 import numpy as np
 import mpl_toolkits.axes_grid1
 
@@ -39,7 +40,7 @@ def add_colorbar(fig, axes, mappable, position='right', size='5%', pad='3%'):
 def plot_phase_2d(fig, axes, transducers, trans_size, cmap='jet', marker='o'):
     trans_x = list(map(lambda s: s.pos[0], transducers))
     trans_y = list(map(lambda s: s.pos[1], transducers))
-    trans_phase = list(map(lambda s: s.phase - math.pi, transducers))
+    trans_phase = list(map(lambda s: cmath.phase(s.phase), transducers))
 
     scat = axes.scatter(trans_x, trans_y, c=trans_phase, cmap=cmap, s=0,
                         marker=marker, vmin=-math.pi, vmax=math.pi,

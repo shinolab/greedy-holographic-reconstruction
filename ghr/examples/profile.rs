@@ -4,7 +4,7 @@
  * Created Date: 01/01/1970
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -13,10 +13,10 @@
 
 use ghr::{
     calculator::{Calculator, CpuCalculator},
-    optimizer::*,
     math_utils::*,
+    optimizer::*,
     wave_source::WaveSource,
-    Float, PI,
+    Complex, Float, PI,
 };
 
 use std::time::Instant;
@@ -39,7 +39,7 @@ fn main() {
     for y in 0..NUM_SOURCE_Y {
         for x in 0..NUM_SOURCE_X {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, 0.0));
+            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -56,14 +56,40 @@ fn main() {
         amps.push(1.0);
     }
 
-    let mut optimizer = GreedyBruteForce::new(16, 1, false, false);
+    let mut optimizer = GreedyBruteForce::new(16, 1, false);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
 
-    for _ in 0..1000 {
-        optimizer.optimize(calculator.wave_sources());
-    }
-    let start = Instant::now();
     optimizer.optimize(calculator.wave_sources());
-    println!("GBS: time={} us", start.elapsed().as_micros());
+
+    let iter = 1000;
+    let mut times = Vec::with_capacity(iter);
+    for _ in 0..iter {
+        let start = Instant::now();
+        optimizer.optimize(calculator.wave_sources());
+        times.push(start.elapsed().as_micros());
+    }
+
+    let mut ave = 0;
+    let mut stdv = 0;
+    let mut max = 0;
+    let mut min = std::u128::MAX;
+
+    for &t in times.iter() {
+        ave += t as i128;
+        max = t.max(max);
+        min = t.min(min);
+    }
+    ave /= times.len() as i128;
+
+    for &t in times.iter() {
+        let t = t as i128;
+        stdv += (t - ave) * (t - ave);
+    }
+    stdv = num_integer::sqrt(stdv / times.len() as i128);
+
+    println!(
+        "Ave: {} us\nStd: {} us\nMax: {} us\nMin: {} us",
+        ave, stdv, max, min
+    );
 }

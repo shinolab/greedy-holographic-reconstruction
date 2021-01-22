@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -46,7 +46,7 @@ macro_rules! calc_from_complex_wave {
             .map(|&observe_point| {
                 let mut $val = Complex::new(0., 0.);
                 for source in $self.sources.iter() {
-                    $val += transfer(source.pos, observe_point, source.amp, source.phase);
+                    $val += source.amp * source.phase * transfer(source.pos, observe_point);
                 }
                 $exp
             })

@@ -4,14 +4,14 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
  *
  */
 
-use ghr::{calculator::*, wave_source::WaveSource, Float};
+use ghr::{calculator::*, wave_source::WaveSource, Complex, Float};
 
 use std::{ffi::c_void, mem::forget};
 
@@ -68,7 +68,7 @@ pub unsafe extern "C" fn GHR_SetWaveSourceProps(
     let idx = i as usize;
     sources[idx].pos = [x, y, z];
     sources[idx].amp = amp;
-    sources[idx].phase = phase;
+    sources[idx].phase = Complex::new(0., phase).exp();
     forget(calc);
 }
 
@@ -84,6 +84,6 @@ pub unsafe extern "C" fn GHR_SetWaveSourceAmp(handle: *mut c_void, i: u64, amp: 
 pub unsafe extern "C" fn GHR_SetWaveSourcePhase(handle: *mut c_void, i: u64, phase: Float) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let sources = (*calc).wave_sources();
-    sources[i as usize].phase = phase;
+    sources[i as usize].phase = Complex::new(0., phase).exp();
     forget(calc);
 }

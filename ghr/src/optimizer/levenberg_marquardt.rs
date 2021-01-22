@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -69,7 +69,7 @@ impl LM {
             P[[i, i]] = Complex::new(amps[i], 0.0);
             let fp = foci[i];
             for j in 0..n {
-                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0);
+                G[[i, j]] = transfer(wave_source[j].pos, fp);
             }
         }
         let B = stack![Axis(1), G, -P];
@@ -185,12 +185,9 @@ impl Optimizer for LM {
             }
         }
 
-        let pi2 = 2.0 * PI;
         for j in 0..n {
-            let amp = 1.0;
-            let phase = x[j] - pi2 * (x[j] / pi2).floor();
-            wave_source[j].amp = amp;
-            wave_source[j].phase = phase;
+            wave_source[j].amp = 1.0;
+            wave_source[j].phase = Complex::new(0., x[j]).exp();
         }
     }
 }

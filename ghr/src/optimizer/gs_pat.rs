@@ -4,7 +4,7 @@
  * Created Date: 01/01/1970
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -13,7 +13,7 @@
 
 use crate::{
     float::Float, math_utils::c_norm, optimizer::Optimizer, utils::transfer,
-    wave_source::WaveSource, Complex, Vector3, PI,
+    wave_source::WaveSource, Complex, Vector3,
 };
 
 use ndarray::*;
@@ -61,7 +61,7 @@ impl Optimizer for GSPAT {
         for i in 0..m {
             let fp = foci[i];
             for j in 0..n {
-                G[[i, j]] = transfer(wave_source[j].pos, fp, 1.0, 0.0);
+                G[[i, j]] = transfer(wave_source[j].pos, fp);
             }
         }
 
@@ -110,9 +110,8 @@ impl Optimizer for GSPAT {
 
         for j in 0..n {
             let amp = c_norm(q[j]).min(1.0);
-            let phase = q[j].arg() + PI;
             wave_source[j].amp = amp;
-            wave_source[j].phase = phase;
+            wave_source[j].phase = q[j];
         }
     }
 }

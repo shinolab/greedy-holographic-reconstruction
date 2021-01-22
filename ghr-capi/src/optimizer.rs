@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -23,14 +23,13 @@ pub unsafe extern "C" fn GHR_GreedyBruteForce(
     size: u64,
     phase_div: u64,
     amp_div: u64,
-    power_opt: bool,
     randamize: bool,
 ) {
     let mut calc: Box<CpuCalculator> = Box::from_raw(handle as *mut _);
     let len = size as usize;
     let foci = std::slice::from_raw_parts(foci as *mut Vector3, len);
     let amps = std::slice::from_raw_parts(amps, len);
-    let mut gfs = GreedyBruteForce::new(phase_div as _, amp_div as _, power_opt, randamize);
+    let mut gfs = GreedyBruteForce::new(phase_div as _, amp_div as _, randamize);
     gfs.set_target_foci(foci);
     gfs.set_target_amps(amps);
     gfs.optimize((*calc).wave_sources());

@@ -4,7 +4,7 @@ Project: ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 19/01/2021
+Last Modified: 22/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -27,7 +27,7 @@ class Vector3(Structure):
 
 
 class WaveSource(Structure):
-    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double), ("amp", c_double), ("phase", c_double)]
+    _fields_ = [("x", c_double), ("y", c_double), ("z", c_double), ("amp", c_double), ("phase_re", c_double), ("phase_im", c_double)]
 
     def __init__(self, position, amp, phase):
         super().__init__()
@@ -48,6 +48,19 @@ class WaveSource(Structure):
     @pos.getter
     def pos(self):
         return (self.x, self.y, self.z)
+
+    @property
+    def phase(self):
+        pass
+
+    @phase.setter
+    def phase(self, phase: complex):
+        self.phase_re = phase.real
+        self.phase_im = phase.imag
+
+    @phase.getter
+    def phase(self):
+        return complex(self.phase_re, self.phase_im)
 
 
 def init_dll(dll_location):
@@ -118,7 +131,7 @@ def __init_buffer():
 
 
 def __init_optimizer():
-    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_ulong, c_bool, c_bool]
+    GHR_DLL.GHR_GreedyBruteForce.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_ulong, c_bool]
     GHR_DLL.GHR_GreedyBruteForce.restypes = [None]
 
     GHR_DLL.GHR_Horn.argtypes = [c_void_p, POINTER(c_double), POINTER(c_double), c_ulong, c_ulong, c_double, c_double]

@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -17,7 +17,7 @@ use ghr::{
     math_utils::*,
     optimizer::*,
     wave_source::WaveSource,
-    Float, PI,
+    Complex, Float, PI,
 };
 
 const NUM_SOURCE_X: usize = 16;
@@ -58,7 +58,7 @@ fn main() {
     for y in 0..NUM_SOURCE_Y {
         for x in 0..NUM_SOURCE_X {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, 0.0));
+            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -91,7 +91,7 @@ fn main() {
     let bounds = buffer.bounds();
     let bb = (bounds.x(), bounds.y());
 
-    let mut optimizer = GreedyBruteForce::new(16, 1, false, false);
+    let mut optimizer = GreedyBruteForce::new(16, 16, false);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
     optimizer.optimize(calculator.wave_sources());

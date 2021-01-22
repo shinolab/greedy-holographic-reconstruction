@@ -4,7 +4,7 @@
  * Created Date: 09/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -18,7 +18,7 @@ use ghr::{
     math_utils::*,
     optimizer::*,
     wave_source::WaveSource,
-    Float, Vector3, PI,
+    Complex, Float, Vector3, PI,
 };
 
 use rand::prelude::*;
@@ -35,7 +35,11 @@ fn calc_p1(focus: Vector3, n_sqrt: usize) -> Float {
         for x in 0..n_sqrt {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
-            transducers.push(WaveSource::new(pos, 1.0, -2.0 * PI * phase));
+            transducers.push(WaveSource::new(
+                pos,
+                1.0,
+                Complex::new(0., 2.0 * PI * (1.0 - phase)).exp(),
+            ));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -101,7 +105,7 @@ fn measure_time<T: Optimizer>(
     for y in 0..n_sqrt {
         for x in 0..n_sqrt {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, 0.0));
+            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -109,8 +113,8 @@ fn measure_time<T: Optimizer>(
     let mut elasped = Vec::new();
     for (foci, amps) in foci_set.iter().zip(amps_set.iter()) {
         for source in calculator.wave_sources() {
-            source.amp = 0.0;
-            source.phase = 0.0;
+            source.amp = 1.0;
+            source.phase = Complex::new(0., 0.);
         }
         opt.set_target_foci(foci);
         opt.set_target_amps(amps);
@@ -156,7 +160,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
-            GreedyBruteForce::new(16, 1, false, false),
+            GreedyBruteForce::new(16, 1, false),
             "gbf_16_1",
             n_sqrt,
             m,
@@ -196,7 +200,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
 
         measure_time(
-            GreedyBruteForce::new(16, 1, false, false),
+            GreedyBruteForce::new(16, 1, false),
             "gbf_16_1",
             n_sqrt,
             m,

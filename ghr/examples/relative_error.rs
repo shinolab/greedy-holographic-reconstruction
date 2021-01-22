@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 19/01/2021
+ * Last Modified: 22/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -36,7 +36,11 @@ fn calc_p1(focus: Vector3) -> Float {
         for x in 0..N_SQRT {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
             let phase = (norm(sub(pos, focus)) % WAVE_LENGTH) / WAVE_LENGTH;
-            transducers.push(WaveSource::new(pos, 1.0, 2.0 * PI * (1.0 - phase)));
+            transducers.push(WaveSource::new(
+                pos,
+                1.0,
+                Complex::new(0., 2.0 * PI * (1.0 - phase)).exp(),
+            ));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -58,7 +62,7 @@ fn set_up() -> CpuCalculator {
     for y in 0..N_SQRT {
         for x in 0..N_SQRT {
             let pos = [SOURCE_SIZE * x as Float, SOURCE_SIZE * y as Float, 0.];
-            transducers.push(WaveSource::new(pos, 0.0, 0.0));
+            transducers.push(WaveSource::new(pos, 0.0, Complex::new(0., 0.)));
         }
     }
     calculator.add_wave_sources(&transducers);
@@ -197,7 +201,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
 
         test(
-            GreedyBruteForce::new(16, 16, false, false),
+            GreedyBruteForce::new(16, 16, false),
             "gbf_16_16",
             m,
             &mut calculator,
