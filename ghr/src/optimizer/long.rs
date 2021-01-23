@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 23/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -116,7 +116,7 @@ impl Optimizer for Long {
         let gt = Self::adjoint(&G);
         let gtg = gt.dot(&G);
         let gtf = gt.dot(&f);
-        let mut q = gtg.solve(&gtf).unwrap();
+        let mut q = gtg.solve_into(gtf).unwrap();
 
         // Correction provided in GS-PAT
         let zc = A.dot(&q);

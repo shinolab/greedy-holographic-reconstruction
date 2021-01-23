@@ -4,7 +4,7 @@
  * Created Date: 01/01/1970
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 23/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -56,13 +56,17 @@ fn main() {
         amps.push(1.0);
     }
 
-    let mut optimizer = GreedyBruteForce::new(16, 1, false);
+    // let mut optimizer = GreedyBruteForce::new(16, 1, false);
+    // let mut optimizer = Horn::new(1000, 1e-3, 0.9);
+    // let mut optimizer = Long::new(1.0);
+    let mut optimizer = LM::new(1e-8, 1e-8, 1e-3, 200);
+    // let mut optimizer = GSPAT::new(100);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
 
     optimizer.optimize(calculator.wave_sources());
 
-    let iter = 1000;
+    let iter = 10;
     let mut times = Vec::with_capacity(iter);
     for _ in 0..iter {
         let start = Instant::now();
