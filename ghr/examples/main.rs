@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 24/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -27,18 +27,24 @@ const SOURCE_SIZE: Float = 10.18;
 macro_rules! write_image {
     ($filename: tt, $buffer: ident, $bb: ident) => {
         let output = std::fs::File::create($filename).unwrap();
+
+        let colormap = scarlet::colormap::ListedColorMap::magma();
+
         let max = $buffer.max();
         let pixels: Vec<_> = $buffer
             .buffer()
             .chunks_exact($bb.0)
             .rev()
             .flatten()
-            .map(|v| ((v / max) * 255.) as u8)
+            .map(|&v| {
+                colormap.vals[(v as Float / max * (colormap.vals.len() - 1) as Float) as usize]
+            })
+            .flat_map(|c| c.iter().map(|x| (x * 255.) as u8).collect::<Vec<_>>())
             .collect();
 
         let encoder = image::png::PngEncoder::new(output);
         encoder
-            .encode(&pixels, $bb.0 as u32, $bb.1 as u32, image::ColorType::L8)
+            .encode(&pixels, $bb.0 as u32, $bb.1 as u32, image::ColorType::Rgb8)
             .unwrap();
     };
 }
@@ -93,7 +99,7 @@ fn main() {
 
     std::fs::create_dir("img").unwrap_or(());
 
-    let mut optimizer = GreedyBruteForce::new(16, 16, false);
+    let mut optimizer = GreedyBruteForce::new(16, 1, false);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
     optimizer.optimize(calculator.wave_sources());

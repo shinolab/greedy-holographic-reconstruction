@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 24/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -179,7 +179,7 @@ fn generate_test_set(
 }
 
 fn main() {
-    let iter = 10;
+    let iter = 1000;
 
     let focus_z = 150.0;
     let center = [
@@ -192,7 +192,7 @@ fn main() {
 
     std::fs::create_dir("relative_errors").unwrap_or(());
 
-    let test_foci_nums: Vec<usize> = vec![2, 4, 8, 16, 32];
+    let test_foci_nums: Vec<usize> = vec![2, 4, 8, 16, 32, 64];
 
     for m in test_foci_nums {
         println!("testing {}", m);
@@ -202,6 +202,15 @@ fn main() {
         test(
             GreedyBruteForce::new(16, 16, false),
             "gbf_16_16",
+            m,
+            &mut calculator,
+            &foci_set,
+            &amps_set,
+        );
+
+        test(
+            GreedyBruteForce::new(16, 1, false),
+            "gbf_16_1",
             m,
             &mut calculator,
             &foci_set,

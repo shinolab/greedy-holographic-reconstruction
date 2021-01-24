@@ -19,6 +19,7 @@ once_cell = {version = "1.5.2", optional = true}
 image = "0.23"
 csv = "1.1"
 num-integer = "0.1.44"
+scarlet = "1.1.0"
 
 [features]
 cache = ["once_cell"]
