@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 24/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -68,7 +68,7 @@ impl GreedyBruteForce {
 
             let mut min_q = Complex::new(0., 0.);
             let mut min_v = Float::INFINITY;
-            for i in 0..self.amp_division {
+            for i in 1..=self.amp_division {
                 let mut q = i as Float * amp_step;
                 for _ in 0..self.phase_division {
                     let r = &G * q;

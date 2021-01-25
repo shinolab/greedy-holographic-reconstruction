@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 23/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -16,7 +16,6 @@ use crate::{
     Float, Vector3,
 };
 
-use num_traits::identities::Zero;
 use rand::{thread_rng, Rng};
 
 use ndarray::*;
@@ -47,45 +46,32 @@ impl Horn {
         m.t().mapv(|c| c.conj())
     }
 
-    fn remove_row<T>(m: &Array2<T>, i: isize) -> Array2<T>
+    fn remove_row_1d<T>(dst: &mut Array1<T>, m: &ArrayBase<ViewRepr<&T>, Dim<[usize; 1]>>, i: isize)
     where
-        T: Clone + Zero,
+        T: Clone,
     {
         let shape = m.shape();
         let row = shape[0] - 1;
-        let col = shape[1];
-        let mut r = Array::zeros((row, col));
-        r.slice_mut(s![0..i, ..]).assign(&m.slice(s![0..i, ..]));
-        r.slice_mut(s![i..row as isize, ..])
-            .assign(&m.slice(s![(i + 1)..(row as isize + 1), ..]));
-        r
-    }
-
-    fn remove_row_1d<T>(m: &ArrayBase<ViewRepr<&T>, Dim<[usize; 1]>>, i: isize) -> Array1<T>
-    where
-        T: Clone + Zero,
-    {
-        let shape = m.shape();
-        let row = shape[0] - 1;
-        let mut r = Array::zeros(row);
-        r.slice_mut(s![0..i]).assign(&m.slice(s![0..i]));
-        r.slice_mut(s![i..row as isize])
+        dst.slice_mut(s![0..i]).assign(&m.slice(s![0..i]));
+        dst.slice_mut(s![i..row as isize])
             .assign(&m.slice(s![(i + 1)..(row as isize + 1)]));
-        r
     }
 
-    fn remove_col<T>(m: &Array2<T>, i: isize) -> Array2<T>
+    fn remove_row_col<T>(dst: &mut Array2<T>, m: &Array2<T>, i: isize)
     where
-        T: Clone + Zero,
+        T: Clone,
     {
         let shape = m.shape();
-        let row = shape[0];
-        let col = shape[1] - 1;
-        let mut r = Array::zeros((row, col));
-        r.slice_mut(s![.., 0..i]).assign(&m.slice(s![.., 0..i]));
-        r.slice_mut(s![.., i..col as isize])
-            .assign(&m.slice(s![.., (i + 1)..(col as isize + 1)]));
-        r
+        let row = shape[0] as isize - 1;
+        let col = shape[1] as isize - 1;
+        dst.slice_mut(s![0..i, 0..i])
+            .assign(&m.slice(s![0..i, 0..i]));
+        dst.slice_mut(s![i..row, 0..i])
+            .assign(&m.slice(s![(i + 1)..(row + 1), 0..i]));
+        dst.slice_mut(s![0..i, i..col])
+            .assign(&m.slice(s![0..i, (i + 1)..(col as isize + 1)]));
+        dst.slice_mut(s![i..row, i..col])
+            .assign(&m.slice(s![(i + 1)..(row + 1), (i + 1)..(col as isize + 1)]));
     }
 }
 impl Optimizer for Horn {
@@ -130,20 +116,19 @@ impl Optimizer for Horn {
             .dot(&Self::adjoint(&u));
 
         let mm = p.dot(&(Array::eye(m) - b.dot(&pinv_b))).dot(&p);
-        let mut x = Array::eye(m);
+        let mut mmc = Array::zeros(m - 1);
 
-        let lambda = self.lambda;
+        let mut x = Array::eye(m);
+        let mut xc = Array::zeros((m - 1, m - 1));
+        let zero = Array::zeros(m);
         for _ in 0..self.repeat {
             let ii = rng.gen_range(0..m) as isize;
-            let xc = Self::remove_row(&x, ii);
-            let xc = Self::remove_col(&xc, ii);
-            let mmc = Self::remove_row_1d(&mm.column(ii as usize), ii);
-            let l = mmc.len();
-            let xb = xc.dot(&mmc).into_shape((l, 1)).unwrap();
-            let gamma = Self::adjoint(&xb).dot(&mmc);
-            let gamma = gamma[0];
+            Self::remove_row_col(&mut xc, &x, ii);
+            Self::remove_row_1d(&mut mmc, &mm.column(ii as usize), ii);
+            let xb = xc.dot(&mmc).into_shape((mmc.len(), 1)).unwrap();
+            let gamma = Self::adjoint(&xb).dot(&mmc)[0];
             if gamma.re > 0.0 {
-                let xb = xb * (-(lambda / gamma.re).sqrt());
+                let xb = xb * (-(self.lambda / gamma.re).sqrt());
                 x.slice_mut(s![ii, 0..ii])
                     .assign(&xb.slice(s![0..ii, 0]).mapv(|c| c.conj()));
                 x.slice_mut(s![ii, (ii + 1)..])
@@ -152,12 +137,12 @@ impl Optimizer for Horn {
                 x.slice_mut(s![(ii + 1).., ii])
                     .assign(&xb.slice(s![ii.., 0]));
             } else {
-                let z1 = Array::zeros(ii as usize);
-                let z2 = Array::zeros(m - ii as usize - 1);
-                x.slice_mut(s![ii, 0..ii]).assign(&z1);
-                x.slice_mut(s![ii, (ii + 1)..]).assign(&z2);
-                x.slice_mut(s![0..ii, ii]).assign(&z1);
-                x.slice_mut(s![(ii + 1).., ii]).assign(&z2);
+                x.slice_mut(s![ii, 0..ii]).assign(&zero.slice(s![0..ii]));
+                x.slice_mut(s![ii, (ii + 1)..])
+                    .assign(&zero.slice(s![(ii + 1)..]));
+                x.slice_mut(s![0..ii, ii]).assign(&zero.slice(s![0..ii]));
+                x.slice_mut(s![(ii + 1).., ii])
+                    .assign(&zero.slice(s![(ii + 1)..]));
             }
         }
 
@@ -173,28 +158,14 @@ impl Optimizer for Horn {
         }
 
         let u = vecs.column(idx);
-        let mut q = pinv_b.dot(&p).dot(&u);
+        let q = pinv_b.dot(&p).dot(&u);
 
-        // Correction
-        let zc = b.dot(&q);
-        let ratio: Float = zc
+        let max_coef = q
             .iter()
-            .zip(amps.iter())
-            .map(|(&az, &a0)| c_norm(az) / a0)
-            .sum();
-        let avg_err = m as Float / ratio;
-        for i in 0..n {
-            q[i] = q[i] / avg_err;
-        }
-
-        // let max_coef = q
-        //     .iter()
-        //     .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)))
-        //     .sqrt();
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)))
+            .sqrt();
         for j in 0..n {
-            // wave_source[j].q = q[j] / max_coef;
-            let amp = c_norm(q[j]).min(1.0);
-            wave_source[j].q = q[j] / c_norm(q[j]) * amp;
+            wave_source[j].q = q[j] / max_coef;
         }
     }
 }
