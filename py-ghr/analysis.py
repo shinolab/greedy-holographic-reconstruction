@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 25/01/2021
 Author: Shun Suzuki
 -----
-Last Modified: 25/01/2021
+Last Modified: 26/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -18,6 +18,9 @@ import re
 import glob
 import os
 
+methods = {'horn': 'SDP+BCD', 'long': 'EVD', 'lm': 'LM', 'gspat': 'GS-PAT',
+           'gbf_256_16': r'Proposed $(K=16, L=256)$', 'gbf_16_1': r'Proposed $(K=1, L=16)$'}
+
 
 def setup_pyplot():
     plt.rcParams['text.usetex'] = True
@@ -28,7 +31,7 @@ def setup_pyplot():
     plt.rcParams['ytick.major.width'] = 1.0
     plt.rcParams['font.size'] = 14
     plt.rcParams['font.family'] = 'sans-serif'
-    plt.rcParams['font.sans-serif'] = 'Arial'
+    plt.rcParams['font.sans-serif'] = ['Arial']
     plt.rcParams["mathtext.fontset"] = 'stixsans'
     plt.rcParams['ps.useafm'] = True
     plt.rcParams['pdf.use14corefonts'] = True
@@ -41,7 +44,6 @@ def relative_error():
 
     r = re.compile(r'(.+)_M(.+)\.csv')
 
-    methods = ['gbf_16_1', 'gbf_16_16', 'horn', 'long', 'lm', 'gspat']
     foci_nums = set()
     for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
         m = r.match(os.path.basename(file))
@@ -51,7 +53,9 @@ def relative_error():
         if len(g) == 2:
             foci_nums.add(int(g[1]))
 
-    data_mean = pd.DataFrame(columns=methods, index=sorted(foci_nums))
+    foci_nums = sorted(foci_nums)
+    data_mean = pd.DataFrame(columns=methods.keys(), index=foci_nums)
+    data_error = pd.DataFrame(columns=methods.keys(), index=foci_nums)
 
     for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
         m = r.match(os.path.basename(file))
@@ -60,59 +64,116 @@ def relative_error():
         g = m.groups()
         if len(g) == 2:
             df = pd.read_csv(file, header=None)
-            mean = df[0].mean()
-            data_mean[g[0]][int(g[1])] = mean
+            data_mean[g[0]][int(g[1])] = 100.0 + df[0].mean()
+            data_error[g[0]][int(g[1])] = df[0].std()
 
+    #
+    DPI = 300
+    fig = plt.figure(figsize=(12, 6), dpi=DPI)
+    axes = fig.add_subplot(111)
+
+    bar_width = 0.15
+    alpha = 1.0
+
+    n = len(foci_nums)
+    index = np.arange(n)
+    for (i, (k, v)) in enumerate(methods.items()):
+        axes.bar(index + i * bar_width, data_mean[k], bar_width,
+                 yerr=data_error[k], capsize=4, alpha=alpha, label=v)
+
+    axes.set_xticks(np.arange(len(foci_nums)) + bar_width * (len(foci_nums) - 1) / 2, minor=False)
+    axes.set_yticks(np.arange(0, 120, 20), minor=False)
+    x_labels = [foci_nums[i] for i in range(len(foci_nums))]
+    y_labels = np.arange(0, 120, 20)
+    axes.set_xticklabels(x_labels, minor=False, fontsize=12)
+    axes.set_yticklabels(y_labels, minor=False, fontsize=12)
+    axes.tick_params(bottom=False, left=True, right=False, top=False)
+
+    axes.hlines([100], -1.5 * bar_width, n, 'black', linestyles='dashed')
+    axes.set_xlim((-1.5 * bar_width, n))
+
+    plt.ylabel(r'Accuracy [\%]')
+    plt.xlabel(r'Number of control points $M$')
+    axes.legend()
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=len(foci_nums), fontsize=12)
+    plt.tight_layout()
+    plt.savefig('accuracy.pdf')
+    # plt.show()
+
+
+def time_foci():
+    data_folder_path = '../ghr/times_foci'
+
+    r = re.compile(r'(.+)_M(\d+)_N(\d+)\.csv')
+
+    foci_nums = set()
+    trans_num = 0
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 3:
+            foci_nums.add(int(g[1]))
+            trans_num = int(g[2])
+
+    foci_nums = sorted(foci_nums)
+    data_mean = pd.DataFrame(columns=methods.keys(), index=foci_nums)
+    data_error = pd.DataFrame(columns=methods.keys(), index=foci_nums)
+
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 3:
+            df = pd.read_csv(file, header=None)
+            data_mean[g[0]][int(g[1])] = df[0].mean()
+            data_error[g[0]][int(g[1])] = df[0].std()
+
+    data_mean = data_mean.dropna(axis=1)
     print(data_mean)
+    print('trans num', trans_num)
 
-    fig, ax = plt.subplots()
-    bar_width = 0.25
-    alpha = 0.8
 
-    for (i, method) in enumerate(methods):
-        n = len(data_mean[method].keys())
-        index = np.arange(n)
-        plt.bar(index + i * bar_width, data_mean[method], bar_width,
-                alpha=alpha, label=method)
+def time_trans():
+    data_folder_path = '../ghr/times_trans'
 
-    plt.ylabel('Counts')
-    # plt.xticks(index + bar_width, ('1', '2', '3', '4'))
-    plt.legend()
-    plt.savefig("yokonarabi_bar.png", dpi=130, bbox_inches='tight', pad_inches=0)
-    plt.show()
+    r = re.compile(r'(.+)_M(\d+)_N(\d+)\.csv')
+
+    foci_num = 0
+    trans_nums = set()
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 3:
+            foci_num = int(g[1])
+            trans_nums.add(int(g[2]))
+
+    trans_nums = sorted(trans_nums)
+    data_mean = pd.DataFrame(columns=methods.keys(), index=trans_nums)
+    data_error = pd.DataFrame(columns=methods.keys(), index=trans_nums)
+
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 3:
+            df = pd.read_csv(file, header=None)
+            data_mean[g[0]][int(g[2])] = df[0].mean()
+            data_error[g[0]][int(g[2])] = df[0].std()
+
+    data_mean = data_mean.dropna(axis=1)
+    print(data_mean)
+    print('num foci', foci_num)
 
 
 if __name__ == "__main__":
-    relative_error()
-    # setup_pyplot()
-    # e_mean = pd.read_csv('data/relative_error_mean.csv')
-    # e_max = pd.read_csv('data/relative_error_max.csv')
-    # e_min = pd.read_csv('data/relative_error_min.csv')
+    setup_pyplot()
 
-    # m = e_mean['M']
-    # gbf = e_mean['GBS']
-    # horn = e_mean['HORN']
-    # long2014 = e_mean['LONG']
-    # lm = e_mean['LM']
-
-    # DPI = 300
-    # fig = plt.figure(figsize=(6, 6), dpi=DPI)
-    # ax = fig.add_subplot()
-    # ax.set_xlabel(r'Number of control points $M$')
-    # ax.set_ylabel(r'Relative error [\%]')
-    # ax.plot(m, e_mean['GBSk1l16'], label='Proposed ($K=1, L=16$)')
-    # ax.fill_between(m, e_min['GBSk1l16'], e_max['GBSk1l16'], alpha=0.5)
-    # ax.plot(m, e_mean['GBSk16l256'], label='Proposed ($K=16, L=256$)', linestyle='dashed')
-    # ax.fill_between(m, e_min['GBSk16l256'], e_max['GBSk16l256'], alpha=0.5)
-    # ax.plot(m, horn, label='SPD+BCD', linestyle='dashdot')
-    # ax.fill_between(m, e_min['HORN'], e_max['HORN'], alpha=0.5)
-    # ax.plot(m, long2014, label='EVD+Reg.', linestyle='dotted')
-    # ax.fill_between(m, e_min['LONG'], e_max['LONG'], alpha=0.5)
-    # ax.plot(m, lm, label='LM', linestyle=(10, (5, 3, 1, 3, 1, 3)))
-    # ax.fill_between(m, e_min['LM'], e_max['LM'], alpha=0.5)
-    # ax.legend(bbox_to_anchor=(1, 0.5), loc='upper right')
-    # ax.set_ylim((0, 100))
-
-    # plt.tight_layout()
-    # plt.savefig('relative_error.pdf')
-    # plt.show()
+    # relative_error()
+    time_foci()
+    time_trans()
