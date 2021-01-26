@@ -200,8 +200,8 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
 
         test(
-            GreedyBruteForce::new(16, 16, false),
-            "gbf_16_16",
+            GreedyBruteForce::new(256, 16, false),
+            "gbf_256_16",
             m,
             &mut calculator,
             &foci_set,
