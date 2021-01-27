@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 23/01/2021
+ * Last Modified: 27/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -106,7 +106,7 @@ impl Optimizer for Horn {
         let (u, s, vt) = b.svd(true, true).unwrap();
         let mut singular_values_inv_mat = Array::zeros((n, m));
         for i in 0..m.min(n) {
-            let r = s[i] / (s[i] * s[i] + alpha * alpha);
+            let r = s[i] / (s[i] * s[i] + alpha);
             singular_values_inv_mat[[i, i]] = Complex::new(r, 0.0);
         }
         let u = u.unwrap();

@@ -4,7 +4,7 @@
  * Created Date: 06/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 23/01/2021
+ * Last Modified: 27/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -166,7 +166,7 @@ impl Optimizer for LM {
                 break;
             }
 
-            let h_lm = -(&A + &(mu * &I)).solve(&g).unwrap();
+            let h_lm = -(&A + &(mu * &I)).solveh(&g).unwrap();
             if h_lm.norm() <= self.eps_2 * (x.norm() + self.eps_2) {
                 found = true;
             } else {
