@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 22/01/2021
+Last Modified: 28/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -43,28 +43,28 @@ def setup_pyplot():
     plt.rcParams['text.latex.preamble'] = r'\usepackage{sfmath}'
 
 
-def plot_phase_xy(wave_sources, name, ext='pdf'):
-    # Observe properties, units are mm
-    X_RANGE = (TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 + R / 2)
-    Y_RANGE = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
-    RESOLUTION = 0.5
+def plot_phase_xy(calculator, name, ext='pdf', x_range=None, y_range=None, resolution=0.5, field_type=FieldType.Power):
+    if x_range is None:
+        x_range = (TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0 + R / 2)
+    if y_range is None:
+        y_range = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
 
     # show phases
     DPI = 300
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
 
-    scat = plot_helper.plot_phase_2d(fig, axes, wave_sources, TRANS_SIZE)
+    scat = plot_helper.plot_phase_2d(fig, axes, calculator.wave_sources(), TRANS_SIZE)
     plot_helper.add_colorbar(fig, axes, scat)
     plt.savefig(name + '_phase.' + ext)
 
     # generate buffer
     buffer = BufferBuilder.new()\
-        .x_range(X_RANGE)\
-        .y_range(Y_RANGE)\
+        .x_range(x_range)\
+        .y_range(y_range)\
         .z_at(Z)\
-        .resolution(RESOLUTION)\
-        .generate(FieldType.Power)
+        .resolution(resolution)\
+        .generate(field_type)
     buffer.calculate(calculator)
 
     # plot
@@ -74,11 +74,11 @@ def plot_phase_xy(wave_sources, name, ext='pdf'):
     print(name, ': ', array.max())
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
-    heat_map = plot_helper.plot_acoustic_field_2d(axes, array, X_RANGE, Y_RANGE, RESOLUTION, ticks_step=ticks_step)
-    x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
-    y_label_num = int(math.floor((Y_RANGE[1] - Y_RANGE[0]) / ticks_step)) + 1
-    x_labels = [-(X_RANGE[1] - X_RANGE[0]) / 2 + ticks_step * i for i in range(x_label_num)]
-    y_labels = [-(Y_RANGE[1] - Y_RANGE[0]) / 2 + ticks_step * i for i in range(y_label_num)]
+    heat_map = plot_helper.plot_acoustic_field_2d(axes, array, x_range, y_range, resolution, ticks_step=ticks_step)
+    x_label_num = int(math.floor((x_range[1] - x_range[0]) / ticks_step)) + 1
+    y_label_num = int(math.floor((y_range[1] - y_range[0]) / ticks_step)) + 1
+    x_labels = [-(x_range[1] - x_range[0]) / 2 + ticks_step * i for i in range(x_label_num)]
+    y_labels = [-(y_range[1] - y_range[0]) / 2 + ticks_step * i for i in range(y_label_num)]
     axes.set_xticklabels(x_labels, minor=False, fontsize=12)
     axes.set_yticklabels(y_labels, minor=False, fontsize=12)
     plt.xlabel(r'$x$\,[mm]')
@@ -132,7 +132,7 @@ def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
     plt.savefig(img_dir + '/xy_target.' + ext)
 
 
-if __name__ == '__main__':
+def smile():
     # Initialize calculator
     calculator = CpuCalculator()
 
@@ -168,7 +168,6 @@ if __name__ == '__main__':
 
     print('target amp: ', amps[0]**2)
 
-    setup_pyplot()
     ext = 'pdf'
 
     img_dir = 'img'
@@ -177,21 +176,69 @@ if __name__ == '__main__':
     plot_target_xy(target_pos, amps, img_dir, ext=ext)
 
     # ######### GHR-BF #####################
-    optimizer = Optimizer.greedy_brute_force(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, img_dir + '/gbs', ext=ext)
+    Optimizer.greedy_brute_force(calculator, target_pos, amps)
+    plot_phase_xy(calculator, img_dir + '/gbs', ext=ext)
 
     # ######## HORN #####################
-    optimizer = Optimizer.horn(calculator, target_pos, amps, 1000, 1e-3, 0.9)
-    plot_phase_xy(wave_sources, img_dir + '/horn', ext=ext)
+    Optimizer.horn(calculator, target_pos, amps, 1000, 1e-3, 0.9)
+    plot_phase_xy(calculator, img_dir + '/horn', ext=ext)
 
     # ######## Long #####################
-    optimizer = Optimizer.long2014(calculator, target_pos, amps, 1.0)
-    plot_phase_xy(wave_sources, img_dir + '/long', ext=ext)
+    Optimizer.long2014(calculator, target_pos, amps, 1.0)
+    plot_phase_xy(calculator, img_dir + '/long', ext=ext)
 
     # ####### Levenberg Marquardt #####################
     Optimizer.levenberg_marquardt(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, img_dir + '/lm', ext=ext)
+    plot_phase_xy(calculator, img_dir + '/lm', ext=ext)
 
     # ####### GS-PAT #####################
     Optimizer.gspat(calculator, target_pos, amps)
-    plot_phase_xy(wave_sources, img_dir + '/gspat', ext=ext)
+    plot_phase_xy(calculator, img_dir + '/gspat', ext=ext)
+
+
+def single():
+    calculator = CpuCalculator()
+    calculator.init_wave_sources(NUM_TRANS_X * NUM_TRANS_Y)
+    center = np.array([TRANS_SIZE * (NUM_TRANS_X - 1) / 2.0, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0, Z])
+
+    wave_sources = calculator.wave_sources()
+    for y in range(NUM_TRANS_Y):
+        for x in range(NUM_TRANS_X):
+            pos = np.array([TRANS_SIZE * x, TRANS_SIZE * y, 0.])
+            i = x + y * NUM_TRANS_X
+            wave_sources[i].pos = pos
+            wave_sources[i].amp = 0.0
+            wave_sources[i].phase = 0.0
+
+    target_pos = [center]
+    amps = 1.0 * np.ones(len(target_pos))
+
+    print('target amp: ', amps[0]**2)
+
+    ext = 'pdf'
+
+    img_dir = 'img'
+    os.makedirs(img_dir, exist_ok=True)
+
+    x_range = (center[0] - 20.0, center[0] + 20.0)
+    y_range = (center[1] - 20.0, center[1] + 20.0)
+
+    Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1)
+    plot_phase_xy(calculator, img_dir + '/gbs_single_p1', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+
+    amps = 10.0 * np.ones(len(target_pos))
+    Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1)
+    plot_phase_xy(calculator, img_dir + '/gbs_single_p10', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+
+    amps = 1.0 * np.ones(len(target_pos))
+    Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1, randomize=True)
+    plot_phase_xy(calculator, img_dir + '/gbs_single_p1_rand', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+
+
+if __name__ == '__main__':
+    setup_pyplot()
+    smile()
+    # single()
