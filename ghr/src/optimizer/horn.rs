@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 27/01/2021
+ * Last Modified: 29/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -162,8 +162,7 @@ impl Optimizer for Horn {
 
         let max_coef = q
             .iter()
-            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)))
-            .sqrt();
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)));
         for j in 0..n {
             wave_source[j].q = q[j] / max_coef;
         }
