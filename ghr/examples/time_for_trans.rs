@@ -140,23 +140,20 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 }
 
 fn main() {
-    let n_sqrt = 16;
-    let iter = 10;
+    let iter = 1000;
 
-    let n_max_pow = 5;
+    let ns = vec![2, 4, 6, 8, 10, 12, 16, 24, 32];
 
     let focus_z = 150.0;
-    let center = [
-        SOURCE_SIZE * (n_sqrt - 1) as Float / 2.0,
-        SOURCE_SIZE * (n_sqrt - 1) as Float / 2.0,
-        focus_z,
-    ];
-
     std::fs::create_dir("times_trans").unwrap_or(());
 
     let m = 128;
-    for i in 2..=n_max_pow {
-        let n_sqrt = 1 << i;
+    for n_sqrt in ns {
+        let center = [
+            SOURCE_SIZE * (n_sqrt - 1) as Float / 2.0,
+            SOURCE_SIZE * (n_sqrt - 1) as Float / 2.0,
+            focus_z,
+        ];
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 
