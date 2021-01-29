@@ -152,6 +152,8 @@ fn main() {
         focus_z,
     ];
 
+    let obs_range = SOURCE_SIZE * n_sqrt as Float;
+
     std::fs::create_dir("times_foci").unwrap_or(());
 
     for i in 1..=m_max_pow {
@@ -159,7 +161,7 @@ fn main() {
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
+        let (foci_set, amps_set) = generate_test_set(center, obs_range, n_sqrt, m, iter);
 
         measure_time(
             GreedyBruteForce::new(16, 1, false),

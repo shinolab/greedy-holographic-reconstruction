@@ -142,12 +142,12 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 fn main() {
     let iter = 1000;
 
-    let ns = vec![2, 4, 6, 8, 10, 12, 16, 24, 32];
+    let ns = vec![8, 12, 16, 20, 24, 28, 32];
 
     let focus_z = 150.0;
     std::fs::create_dir("times_trans").unwrap_or(());
 
-    let m = 128;
+    let m = 64;
     for n_sqrt in ns {
         let center = [
             SOURCE_SIZE * (n_sqrt - 1) as Float / 2.0,
@@ -157,7 +157,8 @@ fn main() {
 
         println!("testing: M={}, N={}", m, n_sqrt * n_sqrt);
 
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, n_sqrt, m, iter);
+        let obs_range = SOURCE_SIZE * n_sqrt as Float;
+        let (foci_set, amps_set) = generate_test_set(center, obs_range, n_sqrt, m, iter);
 
         measure_time(
             GreedyBruteForce::new(16, 1, false),
