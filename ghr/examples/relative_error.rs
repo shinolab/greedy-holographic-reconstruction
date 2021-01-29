@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 24/01/2021
+ * Last Modified: 26/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -92,7 +92,7 @@ fn calc_relative_error<T: Optimizer>(
     let mut numerator = 0.0;
     let mut mean_v = 0.0;
     for (b, amp) in buffer.buffer().iter().zip(amps.iter()) {
-        numerator += (b.abs() - amp).abs();
+        numerator += b.abs() - amp;
         let norm_v = b.abs() / max_v;
         mean_v += norm_v;
     }
@@ -200,8 +200,8 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
 
         test(
-            GreedyBruteForce::new(16, 16, false),
-            "gbf_16_16",
+            GreedyBruteForce::new(256, 16, false),
+            "gbf_256_16",
             m,
             &mut calculator,
             &foci_set,

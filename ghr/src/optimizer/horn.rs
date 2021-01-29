@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 23/01/2021
+ * Last Modified: 29/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -106,7 +106,7 @@ impl Optimizer for Horn {
         let (u, s, vt) = b.svd(true, true).unwrap();
         let mut singular_values_inv_mat = Array::zeros((n, m));
         for i in 0..m.min(n) {
-            let r = s[i] / (s[i] * s[i] + alpha * alpha);
+            let r = s[i] / (s[i] * s[i] + alpha);
             singular_values_inv_mat[[i, i]] = Complex::new(r, 0.0);
         }
         let u = u.unwrap();
@@ -162,8 +162,7 @@ impl Optimizer for Horn {
 
         let max_coef = q
             .iter()
-            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)))
-            .sqrt();
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)));
         for j in 0..n {
             wave_source[j].q = q[j] / max_coef;
         }

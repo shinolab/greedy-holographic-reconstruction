@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 24/01/2021
+ * Last Modified: 25/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -16,7 +16,7 @@ use crate::{
     Vector3, PI,
 };
 use ndarray::*;
-use ndarray_linalg::*;
+use ndarray_linalg::norm::Norm;
 
 pub struct GreedyBruteForce {
     foci: Vec<Vector3>,
@@ -72,9 +72,7 @@ impl GreedyBruteForce {
                 let mut q = i as Float * amp_step;
                 for _ in 0..self.phase_division {
                     let r = &G * q;
-                    let v = ((&r + &cache).map(|c| c_norm(*c)) - &amps)
-                        .map(|x| x.abs())
-                        .sum();
+                    let v = ((&r + &cache).map(|c| c_norm(*c)) - &amps).norm_l1();
                     if v < min_v {
                         min_v = v;
                         min_q = q;
