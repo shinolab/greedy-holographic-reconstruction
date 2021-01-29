@@ -12,8 +12,7 @@
  */
 
 use crate::{
-    math_utils::c_norm, optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex,
-    Float, Vector3,
+    optimizer::Optimizer, utils::transfer, wave_source::WaveSource, Complex, Float, Vector3,
 };
 
 use rand::{thread_rng, Rng};
@@ -162,7 +161,8 @@ impl Optimizer for Horn {
 
         let max_coef = q
             .iter()
-            .fold(Float::NEG_INFINITY, |acc, x| acc.max(c_norm(*x)));
+            .fold(Float::NEG_INFINITY, |acc, x| acc.max(x.norm_sqr()))
+            .sqrt();
         for j in 0..n {
             wave_source[j].q = q[j] / max_coef;
         }
