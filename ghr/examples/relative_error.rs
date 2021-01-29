@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 26/01/2021
+ * Last Modified: 29/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -187,6 +187,9 @@ fn main() {
         SOURCE_SIZE * (N_SQRT - 1) as Float / 2.0,
         focus_z,
     ];
+    let obs_range = SOURCE_SIZE * N_SQRT as Float;
+
+    println!("center: {:?}\nOBS: {}", center, obs_range);
 
     let mut calculator = set_up();
 
@@ -197,7 +200,7 @@ fn main() {
     for m in test_foci_nums {
         println!("testing {}", m);
 
-        let (foci_set, amps_set) = generate_test_set(center, 100.0, m, iter);
+        let (foci_set, amps_set) = generate_test_set(center, obs_range, m, iter);
 
         test(
             GreedyBruteForce::new(256, 16, false),

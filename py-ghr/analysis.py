@@ -153,6 +153,7 @@ def time_foci():
     ticks = [str(m) for m in foci_nums]
     ax.set_xticks(foci_nums)
     ax.set_xticklabels(ticks)
+    ax.legend()
     plt.minorticks_off()
     plt.tight_layout()
     plt.savefig('vs_M_log.' + ext)
@@ -208,6 +209,7 @@ def time_trans():
     ticks = [str(m) for m in trans_nums]
     ax.set_xticks(trans_nums)
     ax.set_xticklabels(ticks)
+    ax.legend()
     plt.minorticks_off()
     plt.tight_layout()
     plt.savefig('vs_N_log.' + ext)
@@ -216,6 +218,6 @@ def time_trans():
 if __name__ == "__main__":
     setup_pyplot()
 
-    relative_error()
+    # relative_error()
     time_foci()
     time_trans()
