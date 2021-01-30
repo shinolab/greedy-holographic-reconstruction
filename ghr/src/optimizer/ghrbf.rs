@@ -16,7 +16,6 @@ use crate::{
     Vector3, PI,
 };
 use ndarray::*;
-use ndarray_linalg::norm::Norm;
 
 pub struct GreedyBruteForce {
     foci: Vec<Vector3>,
@@ -51,8 +50,8 @@ impl GreedyBruteForce {
             amps[i] = self.amps[i];
         }
 
-        let phase_step = Complex::new(0.0, 2.0 * PI / self.phase_division as Float).exp();
         let amp_step = Complex::new(1.0 / self.amp_division as Float, 0.);
+        let phase_step = Complex::new(0.0, 2.0 * PI / self.phase_division as Float).exp();
 
         if self.randomize {
             let mut rng = rand::thread_rng();
@@ -60,31 +59,35 @@ impl GreedyBruteForce {
             wave_sources.shuffle(&mut rng);
         }
 
+        let mut g: ArrayBase<OwnedRepr<Complex>, _> = Array::zeros(m);
+        let mut gt: ArrayBase<OwnedRepr<Complex>, _> = Array::zeros(m);
         for wave_source in wave_sources {
-            let mut G = Array::zeros(m);
             for i in 0..m {
-                G[i] = transfer(wave_source.pos, self.foci[i]);
+                g[i] = transfer(wave_source.pos, self.foci[i]);
             }
-
             let mut min_q = Complex::new(0., 0.);
             let mut min_v = Float::INFINITY;
             for i in 1..=self.amp_division {
                 let mut q = i as Float * amp_step;
                 for _ in 0..self.phase_division {
-                    let r = &G * q;
-                    let v = ((&r + &cache).map(|c| c_norm(*c)) - &amps).norm_l1();
+                    let mut v = 0.0;
+                    for j in 0..m {
+                        let tmp = g[j] * q;
+                        gt[j] = tmp;
+                        v += (c_norm((tmp) + cache[j]) - amps[j]).abs();
+                    }
                     if v < min_v {
                         min_v = v;
                         min_q = q;
                         unsafe {
                             std::ptr::copy_nonoverlapping(
-                                r.as_ptr(),
+                                gt.as_ptr(),
                                 good_field.as_mut_ptr(),
-                                r.len(),
+                                gt.len(),
                             );
                         }
                     }
-                    q *= phase_step;
+                    q = q * phase_step;
                 }
             }
 
