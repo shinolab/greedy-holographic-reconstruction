@@ -4,7 +4,7 @@
  * Created Date: 27/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 29/01/2021
+ * Last Modified: 30/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -203,7 +203,7 @@ fn main() {
         let (foci_set, amps_set) = generate_test_set(center, obs_range, m, iter);
 
         test(
-            GreedyBruteForce::new(256, 16, false),
+            GreedyBruteForce::new(256, 16, true),
             "gbf_256_16",
             m,
             &mut calculator,
@@ -212,7 +212,7 @@ fn main() {
         );
 
         test(
-            GreedyBruteForce::new(16, 1, false),
+            GreedyBruteForce::new(16, 1, true),
             "gbf_16_1",
             m,
             &mut calculator,

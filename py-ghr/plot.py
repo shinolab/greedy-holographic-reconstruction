@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 26/06/2020
 Author: Shun Suzuki
 -----
-Last Modified: 28/01/2021
+Last Modified: 30/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -16,6 +16,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import mpl_toolkits.axes_grid1
+import subprocess
 
 from ghr import CpuCalculator, BufferBuilder, plot_helper, FieldType, Optimizer
 
@@ -25,6 +26,7 @@ TRANS_SIZE = 10
 WAVE_LENGTH = 8.5
 Z = 150
 R = 100.0
+DPI = 300
 
 
 def setup_pyplot():
@@ -49,14 +51,12 @@ def plot_phase_xy(calculator, name, ext='pdf', x_range=None, y_range=None, resol
     if y_range is None:
         y_range = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
 
-    # show phases
-    DPI = 300
-    fig = plt.figure(figsize=(6, 6), dpi=DPI)
-    axes = fig.add_subplot(111, aspect='equal')
-
-    scat = plot_helper.plot_phase_2d(fig, axes, calculator.wave_sources(), TRANS_SIZE)
-    plot_helper.add_colorbar(fig, axes, scat)
-    plt.savefig(name + '_phase.' + ext)
+    # # show phases
+    # fig = plt.figure(figsize=(6, 6), dpi=DPI)
+    # axes = fig.add_subplot(111, aspect='equal')
+    # scat = plot_helper.plot_phase_2d(fig, axes, calculator.wave_sources(), TRANS_SIZE)
+    # plot_helper.add_colorbar(fig, axes, scat)
+    # plt.savefig(name + '_phase.' + ext)
 
     # generate buffer
     buffer = BufferBuilder.new()\
@@ -77,18 +77,21 @@ def plot_phase_xy(calculator, name, ext='pdf', x_range=None, y_range=None, resol
     heat_map = plot_helper.plot_acoustic_field_2d(axes, array, x_range, y_range, resolution, ticks_step=ticks_step)
     x_label_num = int(math.floor((x_range[1] - x_range[0]) / ticks_step)) + 1
     y_label_num = int(math.floor((y_range[1] - y_range[0]) / ticks_step)) + 1
-    x_labels = [-(x_range[1] - x_range[0]) / 2 + ticks_step * i for i in range(x_label_num)]
-    y_labels = [-(y_range[1] - y_range[0]) / 2 + ticks_step * i for i in range(y_label_num)]
-    axes.set_xticklabels(x_labels, minor=False, fontsize=12)
-    axes.set_yticklabels(y_labels, minor=False, fontsize=12)
-    plt.xlabel(r'$x$\,[mm]')
-    plt.ylabel(r'$y$\,[mm]')
+    x_labels = [int(-(x_range[1] - x_range[0]) / 2 + ticks_step * i) for i in range(x_label_num)]
+    y_labels = [int(-(y_range[1] - y_range[0]) / 2 + ticks_step * i) for i in range(y_label_num)]
+    axes.set_xticklabels(x_labels, minor=False, fontsize=16)
+    axes.set_yticklabels(y_labels, minor=False, fontsize=16)
+    plt.xlabel(r'$x$\,[mm]', fontsize=18)
+    plt.ylabel(r'$y$\,[mm]', fontsize=18)
 
     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
     cax = divider.append_axes('right', '5%', pad='3%')
     fig.colorbar(heat_map, cax=cax)
     plt.tight_layout()
-    plt.savefig(name + '_xy.' + ext)
+    name = name + '_xy.' + ext
+    plt.savefig(name)
+    if ext == 'pdf':
+        subprocess.call(['pdfcrop', name])
 
 
 def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
@@ -97,7 +100,6 @@ def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
     Y_RANGE = (TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 - R / 2, TRANS_SIZE * (NUM_TRANS_Y - 1) / 2.0 + R / 2)
 
     # plot
-    DPI = 300
     ticks_step = 10.0
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     axes = fig.add_subplot(111, aspect='equal')
@@ -108,17 +110,17 @@ def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
 
     x_label_num = int(math.floor((X_RANGE[1] - X_RANGE[0]) / ticks_step)) + 1
     y_label_num = int(math.floor((Y_RANGE[1] - Y_RANGE[0]) / ticks_step)) + 1
-    x_labels = [-(X_RANGE[1] - X_RANGE[0]) / 2 + ticks_step * i for i in range(x_label_num)]
-    y_labels = [-(Y_RANGE[1] - Y_RANGE[0]) / 2 + ticks_step * i for i in range(y_label_num)]
+    x_labels = [int(-(X_RANGE[1] - X_RANGE[0]) / 2 + ticks_step * i) for i in range(x_label_num)]
+    y_labels = [int(-(Y_RANGE[1] - Y_RANGE[0]) / 2 + ticks_step * i) for i in range(y_label_num)]
     axes.set_xticks(x_labels, minor=False)
     axes.set_yticks(y_labels, minor=False)
-    axes.set_xticklabels(x_labels, minor=False, fontsize=12)
-    axes.set_yticklabels(y_labels, minor=False, fontsize=12)
+    axes.set_xticklabels(x_labels, minor=False, fontsize=16)
+    axes.set_yticklabels(y_labels, minor=False, fontsize=16)
     axes.set_xlim((-50, 50))
     axes.set_ylim((-50, 50))
 
-    plt.xlabel(r'$x$\,[mm]')
-    plt.ylabel(r'$y$\,[mm]')
+    plt.xlabel(r'$x$\,[mm]', fontsize=18)
+    plt.ylabel(r'$y$\,[mm]', fontsize=18)
 
     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axes)
     cax = divider.append_axes('right', '5%', pad='3%', alpha=0.2)
@@ -129,7 +131,10 @@ def plot_target_xy(target_pos, amp, img_dir, ext='pdf'):
     cb.solids.set_alpha(0)
     cb.patch.set_alpha(0)
     plt.tight_layout()
-    plt.savefig(img_dir + '/xy_target.' + ext)
+    name = img_dir + '/xy_target.' + ext
+    plt.savefig(name)
+    if ext == 'pdf':
+        subprocess.call(['pdfcrop', name])
 
 
 def smile():
@@ -173,10 +178,8 @@ def smile():
     img_dir = 'img'
     os.makedirs(img_dir, exist_ok=True)
 
-    plot_target_xy(target_pos, amps, img_dir, ext=ext)
-
     # ######### GHR-BF #####################
-    Optimizer.greedy_brute_force(calculator, target_pos, amps)
+    Optimizer.greedy_brute_force(calculator, target_pos, amps, amp_div=1, phase_div=16, randomize=True)
     plot_phase_xy(calculator, img_dir + '/gbs', ext=ext)
 
     # ######## HORN #####################
@@ -194,6 +197,8 @@ def smile():
     # ####### GS-PAT #####################
     Optimizer.gspat(calculator, target_pos, amps)
     plot_phase_xy(calculator, img_dir + '/gspat', ext=ext)
+
+    plot_target_xy(target_pos, amps, img_dir, ext=ext)
 
 
 def single():
@@ -225,17 +230,36 @@ def single():
 
     Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1)
     plot_phase_xy(calculator, img_dir + '/gbs_single_p1', ext=ext, x_range=x_range,
-                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
+
+    Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1, randomize=True)
+    plot_phase_xy(calculator, img_dir + '/gbs_single_p1_rand', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
+
+    Optimizer.horn(calculator, target_pos, amps, 1000, 1e-3, 0.9)
+    plot_phase_xy(calculator, img_dir + '/horn_single_p1', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
+
+    Optimizer.long2014(calculator, target_pos, amps, 1.0)
+    plot_phase_xy(calculator, img_dir + '/long_single_p1', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
+
+    Optimizer.levenberg_marquardt(calculator, target_pos, amps)
+    plot_phase_xy(calculator, img_dir + '/lm_single_p1', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
+
+    Optimizer.gspat(calculator, target_pos, amps)
+    plot_phase_xy(calculator, img_dir + '/gspat_single_p1', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
 
     amps = 10.0 * np.ones(len(target_pos))
     Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1)
     plot_phase_xy(calculator, img_dir + '/gbs_single_p10', ext=ext, x_range=x_range,
-                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
 
-    amps = 1.0 * np.ones(len(target_pos))
     Optimizer.greedy_brute_force(calculator, target_pos, amps, phase_div=16, amp_div=1, randomize=True)
-    plot_phase_xy(calculator, img_dir + '/gbs_single_p1_rand', ext=ext, x_range=x_range,
-                  y_range=y_range, resolution=0.1, field_type=FieldType.Pressure)
+    plot_phase_xy(calculator, img_dir + '/gbs_single_p10_rand', ext=ext, x_range=x_range,
+                  y_range=y_range, resolution=0.5, field_type=FieldType.Pressure)
 
 
 if __name__ == '__main__':

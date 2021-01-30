@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 25/01/2021
 Author: Shun Suzuki
 -----
-Last Modified: 29/01/2021
+Last Modified: 30/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -23,7 +23,7 @@ methods = {'horn': 'SDP+BCD', 'long': 'EVD', 'lm': 'LM', 'gspat': 'GS-PAT',
 
 
 DPI = 300
-ext = 'png'
+ext = 'pdf'
 
 
 def setup_pyplot():
@@ -71,6 +71,8 @@ def relative_error():
             data_mean[g[0]][int(g[1])] = 100.0 + df[0].mean()
             data_error[g[0]][int(g[1])] = df[0].std()
 
+    print(data_mean)
+
     #
     fig = plt.figure(figsize=(12, 6), dpi=DPI)
     axes = fig.add_subplot(111)
@@ -101,6 +103,67 @@ def relative_error():
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=len(foci_nums), fontsize=12)
     plt.tight_layout()
     plt.savefig('accuracy.' + ext)
+
+
+def var():
+    data_folder_path = '../ghr/relative_errors'
+
+    r = re.compile(r'(.+)_M(.+)\.csv')
+
+    foci_nums = set()
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 2:
+            foci_nums.add(int(g[1]))
+
+    foci_nums = sorted(foci_nums)
+    data_mean = pd.DataFrame(columns=methods.keys(), index=foci_nums)
+    data_error = pd.DataFrame(columns=methods.keys(), index=foci_nums)
+
+    for file in glob.glob(os.path.join(data_folder_path, '*.csv')):
+        m = r.match(os.path.basename(file))
+        if m is None:
+            continue
+        g = m.groups()
+        if len(g) == 2:
+            df = pd.read_csv(file, header=None)
+            data_mean[g[0]][int(g[1])] = df[1].mean()
+            data_error[g[0]][int(g[1])] = df[1].std()
+
+    #
+    fig = plt.figure(figsize=(12, 6), dpi=DPI)
+    axes = fig.add_subplot(111)
+
+    bar_width = 0.15
+    alpha = 1.0
+
+    n = len(foci_nums)
+    index = np.arange(n)
+    for (i, (k, v)) in enumerate(methods.items()):
+        axes.bar(index + i * bar_width, data_mean[k], bar_width,
+                 yerr=data_error[k], capsize=4, alpha=alpha, label=v)
+
+    axes.set_xticks(np.arange(len(foci_nums)) + bar_width * (len(foci_nums) - 1) / 2, minor=False)
+    # axes.set_yticks(np.arange(0, 120, 20), minor=False)
+    x_labels = [foci_nums[i] for i in range(len(foci_nums))]
+    # y_labels = np.arange(0, 120, 20)
+    axes.set_xticklabels(x_labels, minor=False, fontsize=12)
+    # axes.set_yticklabels(y_labels, minor=False, fontsize=12)
+    axes.tick_params(bottom=False, left=True, right=False, top=False)
+
+    axes.hlines([100], -1.5 * bar_width, n, 'black', linestyles='dashed')
+    axes.set_xlim((-1.5 * bar_width, n))
+    axes.set_ylim((0, 0.3))
+
+    plt.ylabel(r'Standard deviation $\sigma$ among control point amplitudes')
+    plt.xlabel(r'Number of control points $M$')
+    axes.legend()
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=len(foci_nums), fontsize=12)
+    plt.tight_layout()
+    plt.savefig('var.' + ext)
 
 
 def time_foci():
@@ -218,6 +281,7 @@ def time_trans():
 if __name__ == "__main__":
     setup_pyplot()
 
-    # relative_error()
-    time_foci()
-    time_trans()
+    relative_error()
+    var()
+    # time_foci()
+    # time_trans()
