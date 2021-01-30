@@ -4,7 +4,7 @@
  * Created Date: 09/07/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 22/01/2021
+ * Last Modified: 30/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -142,7 +142,7 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 fn main() {
     let iter = 1000;
 
-    let ns = vec![8, 12, 16, 20, 24, 28, 32];
+    let ns = vec![12, 16, 20, 24, 28, 32];
 
     let focus_z = 150.0;
     std::fs::create_dir("times_trans").unwrap_or(());
