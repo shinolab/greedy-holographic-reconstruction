@@ -143,7 +143,7 @@ fn main() {
     let n_sqrt = 18;
     let iter = 1000;
 
-    let m_max_pow = 7;
+    let m_max_pow = 8;
 
     let focus_z = 150.0;
     let center = [
