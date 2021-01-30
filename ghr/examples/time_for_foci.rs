@@ -140,10 +140,10 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 }
 
 fn main() {
-    let n_sqrt = 10;
+    let n_sqrt = 18;
     let iter = 1000;
 
-    let m_max_pow = 10;
+    let m_max_pow = 7;
 
     let focus_z = 150.0;
     let center = [
@@ -156,6 +156,7 @@ fn main() {
 
     std::fs::create_dir("times_foci").unwrap_or(());
 
+    let time = std::time::Instant::now();
     for i in 1..=m_max_pow {
         let m = 1 << i;
 
@@ -194,4 +195,5 @@ fn main() {
 
         measure_time(GSPAT::new(100), "gspat", n_sqrt, m, &foci_set, &amps_set);
     }
+    println!("Elasped: {} s", time.elapsed().as_secs());
 }
