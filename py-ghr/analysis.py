@@ -4,7 +4,7 @@ Project: py-ghr
 Created Date: 25/01/2021
 Author: Shun Suzuki
 -----
-Last Modified: 30/01/2021
+Last Modified: 31/01/2021
 Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
 -----
 Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -206,17 +206,17 @@ def time_foci():
     ax.set_ylabel('Time [ms]')
     ax.set_title('Number of wave sources is ' + str(trans_num))
 
-    linestyles = ['solid', 'dashed', 'dashdot', 'dotted', (10, (5, 3, 1, 3, 1, 3))]
+    markers = ['x', 'o', 'v', '^', 'D']
     for (i, k) in enumerate(data_mean):
-        ax.errorbar(foci_nums, data_mean[k], yerr=data_error[k], capsize=5, fmt='o', markersize=10)
-        ax.plot(foci_nums, data_mean[k], label=methods[k], linestyle=linestyles[i])
+        ax.errorbar(foci_nums, data_mean[k], yerr=data_error[k], capsize=4, fmt=markers[i], markersize=6, label=methods[k], linestyle='solid')
 
     plt.xscale('log')
     plt.yscale('log')
     ticks = [str(m) for m in foci_nums]
     ax.set_xticks(foci_nums)
     ax.set_xticklabels(ticks)
-    ax.legend()
+    ax.set_ylim((1e-2, 1e4))
+    plt.legend(fontsize=12)
     plt.minorticks_off()
     plt.tight_layout()
     plt.savefig('vs_M_log.' + ext)
@@ -249,8 +249,8 @@ def time_trans():
         g = m.groups()
         if len(g) == 3:
             df = pd.read_csv(file, header=None)
-            data_mean[g[0]][int(g[2])] = df[0].mean()
-            data_error[g[0]][int(g[2])] = df[0].std()
+            data_mean[g[0]][int(g[2])] = df[0].mean() / 1000
+            data_error[g[0]][int(g[2])] = df[0].std() / 1000
 
     data_mean = data_mean.dropna(axis=1)
     print(data_mean)
@@ -258,21 +258,22 @@ def time_trans():
 
     fig = plt.figure(figsize=(6, 6), dpi=DPI)
     ax = fig.add_subplot()
-    ax.set_xlabel(r'Number of control points $M$')
+    ax.set_xlabel(r'Number of transducers $N$')
     ax.set_ylabel('Time [ms]')
     ax.set_title('Number of control points is ' + str(foci_num))
 
-    linestyles = ['solid', 'dashed', 'dashdot', 'dotted', (10, (5, 3, 1, 3, 1, 3))]
+    markers = ['x', 'o', 'v', '^', 'D']
     for (i, k) in enumerate(data_mean):
-        ax.errorbar(trans_nums, data_mean[k], yerr=data_error[k], capsize=5, fmt='o', markersize=10)
-        ax.plot(trans_nums, data_mean[k], label=methods[k], linestyle=linestyles[i])
+        ax.errorbar(trans_nums, data_mean[k], yerr=data_error[k], capsize=3, fmt=markers[i], markersize=6, label=methods[k], linestyle='solid')
 
     plt.xscale('log')
     plt.yscale('log')
     ticks = [str(m) for m in trans_nums]
     ax.set_xticks(trans_nums)
     ax.set_xticklabels(ticks)
-    ax.legend()
+
+    ax.legend(fontsize=12)
+    ax.set_ylim((1e-1, 1e5))
     plt.minorticks_off()
     plt.tight_layout()
     plt.savefig('vs_N_log.' + ext)
@@ -281,7 +282,7 @@ def time_trans():
 if __name__ == "__main__":
     setup_pyplot()
 
-    relative_error()
-    var()
-    # time_foci()
-    # time_trans()
+    # relative_error()
+    # var()
+    time_foci()
+    time_trans()

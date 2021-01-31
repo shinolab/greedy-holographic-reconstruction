@@ -4,7 +4,7 @@
  * Created Date: 26/06/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 24/01/2021
+ * Last Modified: 30/01/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -99,7 +99,7 @@ fn main() {
 
     std::fs::create_dir("img").unwrap_or(());
 
-    let mut optimizer = GreedyBruteForce::new(16, 1, false);
+    let mut optimizer = GreedyBruteForce::new(16, 16, false);
     optimizer.set_target_foci(&target_pos);
     optimizer.set_target_amps(&amps);
     optimizer.optimize(calculator.wave_sources());
