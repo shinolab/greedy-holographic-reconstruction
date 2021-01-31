@@ -140,7 +140,7 @@ fn write_data<T: std::io::Write>(wtr: &mut csv::Writer<T>, data: &[u128]) {
 }
 
 fn main() {
-    let n_sqrt = 18;
+    let n_sqrt = 20;
     let iter = 1000;
 
     let m_max_pow = 8;
@@ -194,6 +194,6 @@ fn main() {
         );
 
         measure_time(GSPAT::new(100), "gspat", n_sqrt, m, &foci_set, &amps_set);
+        println!("Elasped: {} s", time.elapsed().as_secs());
     }
-    println!("Elasped: {} s", time.elapsed().as_secs());
 }
